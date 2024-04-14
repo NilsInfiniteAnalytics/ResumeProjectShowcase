@@ -25,9 +25,9 @@ function initGameOfLife() {
     var ctx = canvas.getContext("2d");
     var cellSize = Math.floor(canvas.width / 50);
     var cols = Math.floor(canvas.width / cellSize);
-    var rows = Math.floor(canvas.height / cellSize / 2);
+    var rows = Math.floor(canvas.height / cellSize);
     var centerX = canvas.width / 2;
-    var centerY = rows * cellSize / 2;
+    var centerY = canvas.height / 2;
     var maxDistance = Math.sqrt(centerX * centerX + centerY * centerY) / 1.2;
 
     function toIso(x, y) {
@@ -38,11 +38,11 @@ function initGameOfLife() {
     }
 
     function fromIso(isoX, isoY) {
-        var x = (isoX - centerX) / (cellSize * 0.5) + (isoY - centerY) / (cellSize * 0.25);
-        var y = (isoY - centerY) / (cellSize * 0.25) - (isoX - centerX) / (cellSize * 0.5);
+        var x = (2 * (isoX - centerX) + 4 * (isoY - centerY)) / cellSize;
+        var y = (4 * (isoY - centerY) - 2 * (isoX - centerX)) / cellSize;
         return {
-            x: Math.floor((x + y) / 2) + cols,
-            y: Math.floor((y - x) / 2) + rows
+            x: Math.floor(x / 2),
+            y: Math.floor(y / 2)
         };
     }
 
@@ -75,20 +75,25 @@ function initGameOfLife() {
     var grid = new Array(cols * 2).fill(null).map(() => new Array(rows * 2).fill(null));
 
     function getRandomColor() {
-        var r = Math.floor(Math.random() * 256);
-        var g = Math.floor(Math.random() * 256);
-        var b = Math.floor(Math.random() * 256);
-        return "rgba(" + r + ", " + g + ", " + b + ", 1)";
+        var colors = [
+            "rgba(255, 243, 199, 1)",
+            "rgba(254, 199, 180, 1)",
+            "rgba(252, 129, 158, 1)",
+            "rgba(247, 65, 143, 1)"
+        ];
+        return colors[Math.floor(Math.random() * colors.length)];
     }
 
     canvas.addEventListener("mousemove", function (e) {
         var rect = canvas.getBoundingClientRect();
         var mouseIsoX = e.clientX - rect.left;
-        var mouseIsoY = e.clientY;
+        var mouseIsoY = e.clientY - rect.top;
         var gridPos = fromIso(mouseIsoX, mouseIsoY);
-        if (gridPos.x >= 0 && gridPos.x < grid.length && gridPos.y >= 0 && gridPos.y < grid[0].length) {
-            if (Math.random() < 0.25) {
-                grid[gridPos.x][gridPos.y] = getRandomColor();
+        var gridX = gridPos.x + cols;
+        var gridY = gridPos.y + rows;
+        if (gridX >= 0 && gridX < grid.length && gridY >= 0 && gridY < grid[0].length) {
+            if (Math.random() < 0.40) {
+                grid[gridX][gridY] = getRandomColor();
             }
         }
         draw();
@@ -101,12 +106,11 @@ function initGameOfLife() {
         for (let x = 0; x < grid.length; x++) {
             for (let y = 0; y < grid[x].length; y++) {
                 if (grid[x][y]) {
-                    var pos = toIso(x - cols, y - rows); // Adjust for center
+                    var pos = toIso(x - cols, y - rows);
                     var distance = Math.sqrt(Math.pow(pos.isoX - centerX, 2) + Math.pow(pos.isoY - centerY, 2));
                     var fade = 1 - distance / maxDistance;
-                    ctx.globalAlpha = fade; // Set the alpha level based on distance
+                    ctx.globalAlpha = fade;
 
-                    // Use the color stored in the grid cell
                     ctx.fillStyle = grid[x][y];
                     ctx.beginPath();
                     ctx.moveTo(pos.isoX, pos.isoY - cellSize / 4);
@@ -118,7 +122,7 @@ function initGameOfLife() {
                 }
             }
         }
-        ctx.globalAlpha = 1; // Reset alpha after drawing
+        ctx.globalAlpha = 1;
     }
 
     window.updateGrid = function () {
@@ -127,19 +131,15 @@ function initGameOfLife() {
         for (let x = 0; x < grid.length; x++) {
             for (let y = 0; y < grid[x].length; y++) {
                 var aliveNeighbors = 0;
-                // Check neighbors
                 for (let i = -1; i <= 1; i++) {
                     for (let j = -1; j <= 1; j++) {
-                        if (i === 0 && j === 0) continue; // Skip the cell itself
+                        if (i === 0 && j === 0) continue;
                         var nx = x + i;
                         var ny = y + j;
-                        // Wrap around the grid boundaries
                         if (nx < 0 || nx >= grid.length || ny < 0 || ny >= grid[x].length) continue;
                         if (grid[nx][ny]) aliveNeighbors++;
                     }
                 }
-
-                // Apply the Game of Life rules
                 if (grid[x][y] && (aliveNeighbors === 2 || aliveNeighbors === 3)) {
                     newGrid[x][y] = true;
                 } else if (!grid[x][y] && aliveNeighbors === 3) {
@@ -147,7 +147,6 @@ function initGameOfLife() {
                 }
             }
         }
-
         grid = newGrid;
         draw();
     };
