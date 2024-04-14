@@ -1,12 +1,18 @@
 ﻿@inherits LayoutComponentBase
+@inject IJSRuntime JsRuntime
+@using ClassLibrary.Records
 
 <RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
     <RadzenHeader>
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
-            <RadzenSidebarToggle Click="SideBarExpanderHandler" />
+            <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
+            <RadzenLabel Text="@_windowSize" />
         </RadzenStack>
     </RadzenHeader>
-    <RadzenSidebar @bind-Expanded="@_sidebarExpanded">
+    <RadzenSidebar @bind-Expanded="@_sidebarExpanded" style="position: absolute; z-index: 3">
+        <RadzenStack AlignItems="AlignItems.End" Class="rz-p-2">
+            <RadzenButton Icon="west" Variant="Variant.Text" ButtonStyle="ButtonStyle.Secondary" Click="@(() => _sidebarExpanded = false)" />
+        </RadzenStack>
         <RadzenPanelMenu>
             <RadzenPanelMenuItem Text="Home" Icon="home" Path="/" />
             <RadzenPanelMenuItem Text="Projects" Icon="code" Path="/Projects" />
@@ -20,10 +26,25 @@
 </RadzenLayout>
 
 @code {
-    bool _sidebarExpanded = false;
+    bool _sidebarExpanded;
 
-    void SideBarExpanderHandler()
+    static string? _windowSize;
+
+    [JSInvokable]
+    public static Task UpdateWindowSize(string? size)
     {
-        _sidebarExpanded = !_sidebarExpanded;
+        _windowSize = size;
+        return Task.CompletedTask;
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _windowSize = await JsRuntime.InvokeAsync<string>(JsFunctions.GetWindowSize);
+        }
+        StateHasChanged();
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
 }

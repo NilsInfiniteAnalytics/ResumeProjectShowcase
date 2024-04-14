@@ -10,4 +10,8 @@
     <Folder Include="Features\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="ResumeProjectShowcase.WebApp" />
+  </ItemGroup>
+
 </Project>

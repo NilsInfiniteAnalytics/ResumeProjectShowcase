@@ -7,7 +7,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\scripts.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\scripts.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\scripts.js" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Radzen.Blazor" Version="4.29.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ClassLibrary\ClassLibrary.csproj" />
   </ItemGroup>
 
 </Project>
