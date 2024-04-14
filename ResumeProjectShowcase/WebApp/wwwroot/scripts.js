@@ -92,7 +92,7 @@ function initGameOfLife() {
         var gridX = gridPos.x + cols;
         var gridY = gridPos.y + rows;
         if (gridX >= 0 && gridX < grid.length && gridY >= 0 && gridY < grid[0].length) {
-            if (Math.random() < 0.40) {
+            if (!grid[gridX][gridY] && Math.random() < 0.69) {
                 grid[gridX][gridY] = getRandomColor();
             }
         }
@@ -151,6 +151,6 @@ function initGameOfLife() {
         draw();
     };
 
-    setInterval(window.updateGrid, 500);
+    setInterval(window.updateGrid, 1000);
     draw();
 }
