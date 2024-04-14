@@ -8,6 +8,7 @@
             <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
             <RadzenLabel Text="@_windowSize" Style="margin-right: 20px;" />
             <RadzenLabel Text="@_currentTime" Style="margin-right: 20px;" />
+            <RadzenLabel Text="@WelcomeText" Style="margin-right: 20px;" />
 
         </RadzenStack>
     </RadzenHeader>
@@ -28,13 +29,25 @@
 </RadzenLayout>
 
 @code {
-    bool _sidebarExpanded;
+    bool _sidebarExpanded = true;
 
     static string? _windowSize;
 
     Timer? _timer;
 
     string _currentTime = DateTime.Now.ToString("HH:mm:ss");
+
+    string WelcomeText => $"{Greeting}, user!";
+
+    static string Greeting => GetGreetingByTime();
+
+    private static string GetGreetingByTime()
+    {
+        var hour = DateTime.Now.Hour;
+        if (hour < 12) return "Good morning";
+        if (hour < 17) return "Good afternoon";
+        return "Good evening";
+    }
 
     [JSInvokable]
     public static Task UpdateWindowSize(string? size)
