@@ -7,7 +7,7 @@
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
             <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
             <RadzenLabel Text="@_windowSize" Style="margin-right: 20px;" />
-            <RadzenLabel Text="@_currentTime" Style="margin-right: 20px;" />
+            <RadzenLabel Text="@_currentTime.ToString("HH:mm:ss")" Style="margin-right: 20px;" />
             <RadzenLabel Text="@WelcomeText" Style="margin-right: 20px;" />
 
         </RadzenStack>
@@ -29,13 +29,13 @@
 </RadzenLayout>
 
 @code {
-    bool _sidebarExpanded = true;
+    bool _sidebarExpanded;
 
     static string? _windowSize;
 
     Timer? _timer;
 
-    string _currentTime = DateTime.Now.ToString("HH:mm:ss");
+    static DateTime _currentTime = DateTime.Now;
 
     string WelcomeText => $"{Greeting}, user!";
 
@@ -43,10 +43,19 @@
 
     private static string GetGreetingByTime()
     {
-        var hour = DateTime.Now.Hour;
+        var hour = _currentTime.Hour;
         if (hour < 12) return "Good morning";
         if (hour < 17) return "Good afternoon";
         return "Good evening";
+    }
+
+    static int _clientTimezoneOffsetMinutes;
+
+    [JSInvokable]
+    public static Task SetTimezoneOffset(int minutes)
+    {
+        _clientTimezoneOffsetMinutes = minutes;
+        return Task.CompletedTask;
     }
 
     [JSInvokable]
@@ -68,6 +77,7 @@
         if (firstRender)
         {
             _windowSize = await JsRuntime.InvokeAsync<string>(JsFunctions.GetWindowSize);
+            await JsRuntime.InvokeVoidAsync(JsFunctions.GetClientTimezoneOffset);
             await JsRuntime.InvokeVoidAsync(JsFunctions.TriggerResizeEvent);
         }
         StateHasChanged();
@@ -76,7 +86,9 @@
 
     void TimerCallback(object? state)
     {
-        _currentTime = DateTime.Now.ToString("HH:mm:ss");
+        var utcNow = DateTime.UtcNow;
+        var localTime = utcNow.AddMinutes(-_clientTimezoneOffsetMinutes);
+        _currentTime = localTime;
         InvokeAsync(StateHasChanged);
     }
 
