@@ -6,7 +6,9 @@
     <RadzenHeader>
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
             <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
-            <RadzenLabel Text="@_windowSize" />
+            <RadzenLabel Text="@_windowSize" Style="margin-right: 20px;" />
+            <RadzenLabel Text="@_currentTime" Style="margin-right: 20px;" />
+
         </RadzenStack>
     </RadzenHeader>
     <RadzenSidebar @bind-Expanded="@_sidebarExpanded" style="position: absolute; z-index: 3">
@@ -30,6 +32,10 @@
 
     static string? _windowSize;
 
+    Timer? _timer;
+
+    string _currentTime = DateTime.Now.ToString("HH:mm:ss");
+
     [JSInvokable]
     public static Task UpdateWindowSize(string? size)
     {
@@ -37,14 +43,28 @@
         return Task.CompletedTask;
     }
 
+    protected override Task OnInitializedAsync()
+    {
+        _timer = new Timer(TimerCallback, null, 0, 1000);
+        StateHasChanged();
+        return base.OnInitializedAsync();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             _windowSize = await JsRuntime.InvokeAsync<string>(JsFunctions.GetWindowSize);
+            await JsRuntime.InvokeVoidAsync(JsFunctions.TriggerResizeEvent);
         }
         StateHasChanged();
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    void TimerCallback(object? state)
+    {
+        _currentTime = DateTime.Now.ToString("HH:mm:ss");
+        InvokeAsync(StateHasChanged);
     }
 
 }
