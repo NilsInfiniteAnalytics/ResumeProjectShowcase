@@ -1,7 +1,59 @@
 ﻿@page "/"
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@using ClassLibrary.Records
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Home - Under Construction</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="text-center">
+    <h1>Welcome to My Portfolio!</h1>
+    <p>Currently under construction... but great things are on the way!</p>
+    
+    <h2>Stay Tuned!</h2>
+    <p>While you're here, let me share a fun fact:</p>
+    <blockquote>
+        @funFact
+    </blockquote>
 
-Welcome to your new app.
+    <p>Feel free to explore the rest of the site, and check back soon for updates.</p>
+
+    <div style="margin-top: 40px;">
+        <RadzenButton Text="See My Projects" Click="NavigateToProjects" ButtonStyle="ButtonStyle.Info" />
+        <RadzenButton Text="Contact Me" Click="HandleContactMe" ButtonStyle="ButtonStyle.Success" Style="margin-left: 10px;" />
+    </div>
+</div>
+
+@code
+{
+    HttpClient _httpClient;
+    string funFact = "Loading fun fact...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _httpClient = HttpClientFactory.CreateClient();
+        await FetchFunFact();
+    }
+
+    async Task FetchFunFact()
+    {
+        try
+        {
+            funFact = await _httpClient.GetStringAsync("http://numbersapi.com/random/trivia");
+        }
+        catch (Exception ex)
+        {
+            funFact = "Failed to load fun fact.";
+        }
+    }
+
+    void NavigateToProjects()
+    {
+        NavigationManager.NavigateTo(Pages.Projects);
+    }
+
+    void HandleContactMe()
+    {
+        const string mailtoUrl = "mailto:c.a.popovich@gmail.com?subject=Contact from My Portfolio&body=Hi, I'd like to discuss...";
+        NavigationManager.NavigateTo(mailtoUrl, forceLoad: true);
+    }
+}

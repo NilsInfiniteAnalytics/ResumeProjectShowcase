@@ -8,6 +8,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddRadzenComponents();
 
+builder.Services.AddHttpClient();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
