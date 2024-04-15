@@ -7,15 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\scripts.js" />
+    <Content Remove="wwwroot\gameOfLifeUtils.js" />
   </ItemGroup>
 
   <ItemGroup>
-    <_ContentIncludedByDefault Remove="wwwroot\scripts.js" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="wwwroot\scripts.js" />
+    <None Include="wwwroot\gameOfLifeUtils.js" />
   </ItemGroup>
 
   <ItemGroup>

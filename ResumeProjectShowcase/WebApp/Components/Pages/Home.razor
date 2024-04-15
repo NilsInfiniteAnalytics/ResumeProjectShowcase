@@ -1,13 +1,20 @@
 ﻿@page "/"
 @inject IJSRuntime JsRuntime
 
-
 <PageTitle>Home - Under Construction</PageTitle>
 
-<canvas id="gameCanvas"></canvas>
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div id="overlayPanel" style="left: 25%; top: 20%;">
+        <div id="overlayContent" style="color: black;">
+            @panelText
+        </div>
+    </div>
+</div>
 
-@code
-{
+@code {
+    private string panelText = "Coming soon...";
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
