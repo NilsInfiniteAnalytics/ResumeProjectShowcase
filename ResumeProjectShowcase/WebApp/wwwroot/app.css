@@ -6,17 +6,16 @@
 
 #overlayPanel {
     position: absolute;
-    width: 200px; /* Or any other size */
-    height: 100px; /* Or any other size */
+    width: 200px;
+    height: 100px;
     z-index: 10;
-    pointer-events: none; /* This makes sure the canvas underneath is still clickable */
-    transform-origin: bottom left; /* Adjust as necessary for your perspective */
-    transform: skew(-63deg, 27deg);
-    background: rgba(255, 255, 255, 0.8); /* Adjust color and opacity as needed */
-    border: 1px solid #000; /* Optional border */
-    overflow: hidden; /* In case you have content that should be clipped */
+    pointer-events: none;
+    transform-origin: bottom left;
+    transform: skew(-62deg, 26deg);
+    background: rgba(255, 255, 255, 0.8);
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); /* Optional shadow for 3D effect */
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
 }

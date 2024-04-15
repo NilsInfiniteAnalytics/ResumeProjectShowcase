@@ -31,7 +31,7 @@ function initGameOfLife() {
     canvas.width = window.innerWidth * 0.96;
     canvas.height = window.innerHeight * 0.9;
     var ctx = canvas.getContext("2d");
-    var cellSize = Math.floor(canvas.width / 50);
+    var cellSize = Math.floor(canvas.width / 25);
     var cols = Math.floor(canvas.width / cellSize);
     var rows = Math.floor(canvas.height / cellSize);
     var centerX = canvas.width / 2;
