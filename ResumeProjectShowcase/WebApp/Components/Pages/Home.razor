@@ -9,14 +9,28 @@
         padding: 0 !important;
         overflow: hidden !important;
     }
+
+    .panel {
+        position: absolute;
+        width: 200px;
+        height: 100px;
+        z-index: 10;
+        pointer-events: none;
+        transform-origin: bottom left;
+        transform: skew(-62deg, 26deg);
+        background: rgba(255, 255, 255, 0.85);
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+    }
 </style>
 
-<div id="game-container">
-    <canvas id="gameCanvas"></canvas>
-    <div id="overlayPanel" style="left: 25%; top: 20%;">
-        <div id="overlayContent" style="color: black;">
-            @panelText
-        </div>
+<canvas id="gameCanvas"></canvas>
+<div class="panel" style="left: 25%; top: 20%;">
+    <div>
+        Home
     </div>
 </div>
 
