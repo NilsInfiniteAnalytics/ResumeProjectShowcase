@@ -7,14 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\gameOfLifeUtils.js" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="wwwroot\gameOfLifeUtils.js" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Radzen.Blazor" Version="4.29.6" />
   </ItemGroup>
 
