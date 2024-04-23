@@ -1,144 +1,111 @@
-﻿function toIso(x, y, centerX, centerY, cellSize) {
+﻿var isoScaleX = 0.866;
+var isoScaleY = 0.5;
+var rotationAngleDegrees = 20;
+var rotationAngleRadians = rotationAngleDegrees * (Math.PI / 180);
+function toIso(x, y, centerX, centerY, cellSize) {
+    var rotatedX = x * Math.cos(rotationAngleRadians) - y * Math.sin(rotationAngleRadians);
+    var rotatedY = x * Math.sin(rotationAngleRadians) + y * Math.cos(rotationAngleRadians);
     return {
-        isoX: centerX + (x - y) * cellSize * 0.5,
-        isoY: centerY + (x + y) * cellSize * 0.25
+        isoX: centerX + rotatedX * cellSize * isoScaleX,
+        isoY: centerY + rotatedY * cellSize * isoScaleY
     };
 }
-
 function fromIso(isoX, isoY, centerX, centerY, cellSize) {
-    var x = (2 * (isoX - centerX) + 4 * (isoY - centerY)) / cellSize;
-    var y = (4 * (isoY - centerY) - 2 * (isoX - centerX)) / cellSize;
+    var unscaledX = (isoX - centerX) / (cellSize * isoScaleX);
+    var unscaledY = (isoY - centerY) / (cellSize * isoScaleY);
+    var rad = -rotationAngleRadians;
+    var cosAngle = Math.cos(rad);
+    var sinAngle = Math.sin(rad);
+    var x = unscaledX * cosAngle - unscaledY * sinAngle;
+    var y = unscaledX * sinAngle + unscaledY * cosAngle;
     return {
-        x: Math.floor(x / 2),
-        y: Math.floor(y / 2)
+        x: x,
+        y: y
     };
 }
-
-function getRandomColor() {
-    var colors = [
-        "rgba(255, 243, 199, 1)",
-        "rgba(254, 199, 180, 1)",
-        "rgba(252, 129, 158, 1)",
-        "rgba(247, 65, 143, 1)"
-    ];
-    return colors[Math.floor(Math.random() * colors.length)];
-}
-
 function initGameOfLife() {
-    var canvas = document.getElementById("gameCanvas");
+    var canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
-    var ctx = canvas.getContext("2d");
+    var ctx = canvas.getContext('2d');
     var cellSizeControl = 10;
-    var cellSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) / cellSizeControl);
     var cols, rows, centerX, centerY, maxDistance;
     var grid;
-    var intervalId;
-    var minAlpha = 0.1;
-    var maxAlpha = 0.666;
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        cellSize = Math.floor(Math.min(canvas.width, canvas.height) / cellSizeControl);
-        cols = Math.floor(canvas.width / cellSize);
-        rows = Math.floor(canvas.height / cellSize);
+        cellSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) / cellSizeControl);
+        cols = Math.floor(2 * canvas.width / cellSize);
+        rows = Math.floor(2 * canvas.height / cellSize);
         centerX = canvas.width / 2;
         centerY = canvas.height / 2;
-        maxDistance = Math.sqrt(centerX * centerX + centerY * centerY) / 1.1;
-        grid = new Array(cols * 10).fill(null).map(() => new Array(rows * 10).fill(null));
-        if (intervalId) clearInterval(intervalId);
-        intervalId = setInterval(window.updateGrid, 1000);
-        draw();
+        maxDistance = Math.sqrt(centerX * centerX + centerY * centerY);
+        grid = new Array(cols).fill(null).map(() => new Array(rows).fill(false));
+        drawGridLines();
     }
     window.onresize = resizeCanvas;
     resizeCanvas();
+    function drawIsoSquare(ctx, gridX, gridY, centerX, centerY, cellSize) {
+        // Get the top-left corner of the square
+        var start = toIso(gridX, gridY, centerX, centerY, cellSize);
+        // Calculate the other corners of the square based on cellSize and iso scaling
+        var points = [
+            start,
+            toIso(gridX + 1, gridY, centerX, centerY, cellSize),
+            toIso(gridX + 1, gridY + 1, centerX, centerY, cellSize),
+            toIso(gridX, gridY + 1, centerX, centerY, cellSize)
+        ];
+
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'; // Semi-transparent red
+        ctx.beginPath();
+        ctx.moveTo(points[0].isoX, points[0].isoY);
+        for (var i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].isoX, points[i].isoY);
+        }
+        ctx.closePath();
+        ctx.fill();
+    }
     function drawGridLines() {
-        var longDashPattern = [15, 20];
-        var shortDashPattern = [15, 20];
-        for (let i = -10 * cols; i <= 10 * cols; i++) {
-            for (let j = -10 * rows; j <= 10 * rows; j++) {
-                var start = toIso(i, j, centerX, centerY, cellSize);
-                var endRight = toIso(i + 1, j, centerX, centerY, cellSize);
-                var endDown = toIso(i, j + 1, centerX, centerY, cellSize);
-                var distance = Math.sqrt(Math.pow(start.isoX - centerX, 2) + Math.pow(start.isoY - centerY, 2));
-                var normalizedDistance = distance / maxDistance;
-                var alpha = maxAlpha * (1 - normalizedDistance) + minAlpha * normalizedDistance;
-                ctx.globalAlpha = alpha;
-                // Set the dash pattern for one direction of lines
-                ctx.setLineDash(longDashPattern);
-                ctx.beginPath();
-                ctx.moveTo(start.isoX, start.isoY);
-                ctx.lineTo(endRight.isoX, endRight.isoY);
-                ctx.stroke();
-                // Set a different dash pattern for the other direction
-                ctx.setLineDash(shortDashPattern);
-                ctx.beginPath();
-                ctx.moveTo(start.isoX, start.isoY);
-                ctx.lineTo(endDown.isoX, endDown.isoY);
-                ctx.stroke();
-            }
-        }
-        // Reset the dash pattern to solid
-        ctx.setLineDash([]);
-        ctx.globalAlpha = 1;
-    }
-    canvas.addEventListener("mousemove", function (e) {
-        var rect = canvas.getBoundingClientRect();
-        var mouseIsoX = e.clientX - rect.left;
-        var mouseIsoY = e.clientY - rect.top;
-        var gridPos = fromIso(mouseIsoX, mouseIsoY, centerX, centerY, cellSize);
-        var gridX = gridPos.x + cols;
-        var gridY = gridPos.y + rows;
-        grid[gridX][gridY] = getRandomColor();
-        draw();
-    });
-    function draw() {
+        var longDashPattern = [5, 10];
+        var shortDashPattern = [2, 10];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawGridLines();
-        for (let x = 0; x < grid.length; x++) {
-            for (let y = 0; y < grid[x].length; y++) {
-                if (grid[x][y]) {
-                    var pos = toIso(x - cols, y - rows, centerX, centerY, cellSize);
-                    ctx.fillStyle = grid[x][y];
-                    ctx.beginPath();
-                    ctx.moveTo(pos.isoX, pos.isoY - cellSize / 4);
-                    ctx.lineTo(pos.isoX + cellSize / 2, pos.isoY);
-                    ctx.lineTo(pos.isoX, pos.isoY + cellSize / 4);
-                    ctx.lineTo(pos.isoX - cellSize / 2, pos.isoY);
-                    ctx.closePath();
-                    var distance = Math.sqrt(Math.pow((pos.isoX / 2) - centerX, 2) + Math.pow((pos.isoY / 2) - centerY, 2));
-                    var normalizedDistance = distance / maxDistance;
-                    var alpha = maxAlpha * (1 - normalizedDistance) + minAlpha * normalizedDistance;
-                    ctx.globalAlpha = alpha;
-                    ctx.fill();
-                }
-            }
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)'; // Light grey lines
+        // Draw horizontal lines
+        for (let j = -rows; j <= rows; j++) {
+            var start = toIso(-cols, j, centerX, centerY, cellSize);
+            var end = toIso(cols, j, centerX, centerY, cellSize);
+            ctx.beginPath();
+            ctx.setLineDash(longDashPattern);
+            ctx.moveTo(start.isoX, start.isoY);
+            ctx.lineTo(end.isoX, end.isoY);
+            ctx.stroke();
         }
-        ctx.globalAlpha = 1;
+        // Draw vertical lines
+        for (let i = -cols; i <= cols; i++) {
+            var start = toIso(i, -rows, centerX, centerY, cellSize);
+            var end = toIso(i, rows, centerX, centerY, cellSize);
+            ctx.beginPath();
+            ctx.setLineDash(shortDashPattern);
+            ctx.moveTo(start.isoX, start.isoY);
+            ctx.lineTo(end.isoX, end.isoY);
+            ctx.stroke();
+        }
     }
-    window.updateGrid = function () {
-        var newGrid = new Array(cols * 10).fill(false).map(() => new Array(rows * 10).fill(false));
-        for (let x = 0; x < grid.length; x++) {
-            for (let y = 0; y < grid[x].length; y++) {
-                var aliveNeighbors = 0;
-                for (let i = -1; i <= 1; i++) {
-                    for (let j = -1; j <= 1; j++) {
-                        if (i === 0 && j === 0) continue;
-                        var nx = x + i;
-                        var ny = y + j;
-                        if (nx < 0 || nx >= grid.length || ny < 0 || ny >= grid[x].length) continue;
-                        if (grid[nx][ny]) aliveNeighbors++;
-                    }
-                }
-                if (grid[x][y] && (aliveNeighbors === 2 || aliveNeighbors === 3)) {
-                    newGrid[x][y] = true;
-                } else if (!grid[x][y] && aliveNeighbors === 3) {
-                    newGrid[x][y] = true;
-                }
-            }
-        }
-        grid = newGrid;
-        draw();
-    };
-    setInterval(window.updateGrid, 1000);
-    draw();
+    canvas.addEventListener('mousemove', function (e) {
+        var rect = canvas.getBoundingClientRect();
+        var mouseX = e.clientX - rect.left;
+        var mouseY = e.clientY - rect.top;
+        var gridCoords = fromIso(mouseX, mouseY, centerX, centerY, cellSize);
+        var gridX = Math.floor(gridCoords.x);
+        var gridY = Math.floor(gridCoords.y);
+
+        // Clear the previous drawing
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Redraw the grid lines
+        drawGridLines();
+        // Draw the isometric square at the grid position
+        drawIsoSquare(ctx, gridX, gridY, centerX, centerY, cellSize);
+    });
+    drawGridLines();
 }
+
+initGameOfLife();
