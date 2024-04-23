@@ -34,8 +34,8 @@ function initGameOfLife() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         cellSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) / cellSizeControl);
-        cols = Math.floor(2 * canvas.width / cellSize);
-        rows = Math.floor(2 * canvas.height / cellSize);
+        cols = Math.floor(canvas.width / cellSize);
+        rows = Math.floor(canvas.height / cellSize);
         centerX = canvas.width / 2;
         centerY = canvas.height / 2;
         maxDistance = Math.sqrt(centerX * centerX + centerY * centerY);
@@ -45,8 +45,7 @@ function initGameOfLife() {
     window.onresize = resizeCanvas;
     resizeCanvas();
     function drawIsoSquare(ctx, gridX, gridY, centerX, centerY, cellSize) {
-        // Get the top-left corner of the square
-        var start = toIso(gridX, gridY, centerX, centerY, cellSize);
+        var start = toIso(gridX, gridY, centerX, centerY, cellSize); // Get the top-left corner of the square
         // Calculate the other corners of the square based on cellSize and iso scaling
         var points = [
             start,
@@ -54,7 +53,6 @@ function initGameOfLife() {
             toIso(gridX + 1, gridY + 1, centerX, centerY, cellSize),
             toIso(gridX, gridY + 1, centerX, centerY, cellSize)
         ];
-
         ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'; // Semi-transparent red
         ctx.beginPath();
         ctx.moveTo(points[0].isoX, points[0].isoY);
@@ -97,15 +95,8 @@ function initGameOfLife() {
         var gridCoords = fromIso(mouseX, mouseY, centerX, centerY, cellSize);
         var gridX = Math.floor(gridCoords.x);
         var gridY = Math.floor(gridCoords.y);
-
-        // Clear the previous drawing
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Redraw the grid lines
-        drawGridLines();
-        // Draw the isometric square at the grid position
         drawIsoSquare(ctx, gridX, gridY, centerX, centerY, cellSize);
+        console.log("Mouse at (" + mouseX + ", " + mouseY + ") is over grid square (" + gridX + ", " + gridY + ")");
+        console.log("Grid Location: " + grid[gridX][gridY]);
     });
-    drawGridLines();
 }
-
-initGameOfLife();
