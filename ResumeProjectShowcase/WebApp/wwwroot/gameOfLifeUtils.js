@@ -1,6 +1,6 @@
 ﻿var isoScaleX = 0.866;
 var isoScaleY = 0.5;
-var rotationAngleDegrees = 20;
+var rotationAngleDegrees = 12;
 var rotationAngleRadians = rotationAngleDegrees * (Math.PI / 180);
 function toIso(x, y, centerX, centerY, cellSize) {
     var rotatedX = x * Math.cos(rotationAngleRadians) - y * Math.sin(rotationAngleRadians);
@@ -36,15 +36,15 @@ function initGameOfLife() {
     var canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
     var ctx = canvas.getContext('2d');
-    var cellSizeControl = 10;
+    var cellSizeControl = 12;
     var cols, rows, centerX, centerY, maxDistance;
     var grid
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         cellSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) / cellSizeControl);
-        centerX = 100;
-        centerY = -500;
+        centerX = 50;
+        centerY = -400;
         maxDistance = Math.sqrt(centerX * centerX + centerY * centerY);
         // Sample the corners of the canvas
         var topLeft = fromIso(0, 0, centerX, centerY, cellSize);
@@ -99,7 +99,7 @@ function initGameOfLife() {
         var longDashPattern = [5, 10];
         var shortDashPattern = [2, 10];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)'; // Light grey lines
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.33)'; // Light grey lines
         // Draw horizontal lines
         for (let j = -rows; j <= rows; j++) {
             var start = toIso(-cols, j, centerX, centerY, cellSize);
@@ -168,6 +168,6 @@ function initGameOfLife() {
         grid = newGrid;
         draw();
     };
-    setInterval(window.updateGrid, 250);
+    setInterval(window.updateGrid, 1000);
     draw();
 }

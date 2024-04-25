@@ -12,31 +12,52 @@
 
     .panel {
         position: absolute;
-        width: 200px;
-        height: 100px;
+        width: 20vw;
+        height: 25vh;
         z-index: 10;
-        pointer-events: none;
-        transform-origin: bottom left;
-        transform: skew(-62deg, 26deg);
+        pointer-events: auto;
         background: rgba(255, 255, 255, 0.85);
         overflow: hidden;
         display: flex;
         justify-content: center;
         align-items: center;
         box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+        transform-origin: center;
+        transform: rotateX(37deg) rotateY(-12deg) rotateZ(17deg);
+        background-size: cover;
+        background-position: center;
+        transition: transform 0.5s ease, opacity 0.5s ease;
     }
+
+        .panel.home {
+            background-image: url('home.jpg');
+        }
+
+        .panel.about {
+            background-image: url('hobby.jpg');
+        }
+
+        .panel.contact {
+            background-image: url('about.jpg');
+        }
+
+        .panel.projects {
+            background-image: url('projects.jpg');
+        }
+
+        .panel:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
 </style>
 
 <canvas id="gameCanvas"></canvas>
-<div class="panel" style="left: 25%; top: 20%;">
-    <div>
-        Home
-    </div>
-</div>
+<div class="panel home" style="left: 18%; top: 9%;"></div>
+<div class="panel about" style="left: 76%; top: 12%;"></div>
+<div class="panel contact" style="left: 9%; top: 70%;"></div>
+<div class="panel projects" style="left: 75%; top: 69%;"></div>
 
 @code {
-    private string panelText = "/Home";
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
