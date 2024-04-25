@@ -29,16 +29,35 @@ function initGameOfLife() {
     var ctx = canvas.getContext('2d');
     var cellSizeControl = 10;
     var cols, rows, centerX, centerY, maxDistance;
-    var grid;
+    var grid, gridMinX, gridMinY;
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         cellSize = Math.floor(Math.min(window.innerWidth, window.innerHeight) / cellSizeControl);
-        cols = Math.floor(canvas.width / cellSize);
-        rows = Math.floor(canvas.height / cellSize);
         centerX = canvas.width / 2;
         centerY = canvas.height / 2;
         maxDistance = Math.sqrt(centerX * centerX + centerY * centerY);
+        // Sample the corners of the canvas
+        var topLeft = fromIso(0, 0, centerX, centerY, cellSize);
+        var topRight = fromIso(canvas.width, 0, centerX, centerY, cellSize);
+        var bottomLeft = fromIso(0, canvas.height, centerX, centerY, cellSize);
+        var bottomRight = fromIso(canvas.width, canvas.height, centerX, centerY, cellSize);
+
+        // Find the minimum and maximum grid coordinates
+        var minX = Math.floor(Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x));
+        var maxX = Math.ceil(Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x));
+        var minY = Math.floor(Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y));
+        var maxY = Math.ceil(Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y));
+
+        // Define the number of columns and rows based on the sampled corners
+        cols = maxX - minX + 1;
+        rows = maxY - minY + 1;
+
+        // Define gridMinX and gridMinY to store the minimum grid coordinates
+        gridMinX = minX;
+        gridMinY = minY;
+
+        // Create the grid array based on the calculated number of columns and rows
         grid = new Array(cols).fill(null).map(() => new Array(rows).fill(false));
         drawGridLines();
     }
@@ -97,6 +116,7 @@ function initGameOfLife() {
         var gridY = Math.floor(gridCoords.y);
         drawIsoSquare(ctx, gridX, gridY, centerX, centerY, cellSize);
         console.log("Mouse at (" + mouseX + ", " + mouseY + ") is over grid square (" + gridX + ", " + gridY + ")");
-        console.log("Grid Location: " + grid[gridX][gridY]);
+        console.log("Grid Location: " + grid[gridX - gridMinX][gridY - gridMinY]);
     });
+
 }
