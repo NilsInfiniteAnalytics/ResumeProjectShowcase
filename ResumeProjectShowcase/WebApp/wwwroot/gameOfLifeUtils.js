@@ -68,8 +68,7 @@ function initGameOfLife() {
     window.onresize = resizeCanvas;
     resizeCanvas();
     function drawIsoSquare(ctx, gridX, gridY, centerX, centerY, cellSize) {
-        var start = toIso(gridX, gridY, centerX, centerY, cellSize); // Get the top-left corner of the square
-        // Calculate the other corners of the square based on cellSize and iso scaling
+        var start = toIso(gridX, gridY, centerX, centerY, cellSize);
         var points = [
             start,
             toIso(gridX + 1, gridY, centerX, centerY, cellSize),
