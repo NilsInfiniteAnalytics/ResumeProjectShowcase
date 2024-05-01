@@ -33,9 +33,9 @@ function getRandomColor(alpha = 0.666) {
     return colors[Math.floor(Math.random() * colors.length)];
 }
 function initGameOfLife() {
-    var canvas = document.getElementById('gameCanvas');
+    var canvas = document.getElementById("gameCanvas");
     if (!canvas) return;
-    var ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext("2d");
     var cellSizeControl = 12;
     var cols, rows, centerX, centerY, maxDistance;
     var grid
@@ -62,7 +62,9 @@ function initGameOfLife() {
         gridMinX = minX;
         gridMinY = minY;
         // Create the grid array based on the calculated number of columns and rows
-        grid = new Array(cols).fill(null).map(() => new Array(rows).fill(false));
+        grid = new Array(cols).fill(null).map(() => new Array(rows).fill(null).map(() => {
+            return { alive: false, color: getRandomColor(), opacity: 1.0 };
+        }));
         drawGridLines();
     }
     window.onresize = resizeCanvas;
@@ -75,13 +77,17 @@ function initGameOfLife() {
             toIso(gridX + 1, gridY + 1, centerX, centerY, cellSize),
             toIso(gridX, gridY + 1, centerX, centerY, cellSize)
         ];
-        ctx.fillStyle = getRandomColor();
+        var cell = grid[gridX][gridY];
+        var color = cell.color;
+        var alpha = cell.opacity;
+        var rgba = color.replace(/\d+\.?\d*\)$/g, `${alpha})`);
+        ctx.fillStyle = rgba;
         ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 5;
         ctx.shadowOffsetY = 5;
-        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.strokeStyle = "rgba(0,0,0,0.5)";
         ctx.lineWidth = 1;
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
         ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 5;
         ctx.shadowOffsetY = 5;
@@ -93,13 +99,13 @@ function initGameOfLife() {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        ctx.shadowColor = 'transparent';
+        ctx.shadowColor = "transparent";
     }
     function drawGridLines() {
         var longDashPattern = [5, 10];
         var shortDashPattern = [2, 10];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.33)'; // Light grey lines
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.33)"; // Light grey lines
         // Draw horizontal lines
         for (let j = -rows; j <= rows; j++) {
             var start = toIso(-cols, j, centerX, centerY, cellSize);
@@ -121,7 +127,7 @@ function initGameOfLife() {
             ctx.stroke();
         }
     }
-    canvas.addEventListener('mousemove', function (e) {
+    canvas.addEventListener("mousemove", function (e) {
         var rect = canvas.getBoundingClientRect();
         var mouseX = e.clientX - rect.left;
         var mouseY = e.clientY - rect.top;
@@ -129,7 +135,9 @@ function initGameOfLife() {
         var gridX = Math.floor(gridCoords.x);
         var gridY = Math.floor(gridCoords.y);
         if (gridX >= 0 && gridX < cols && gridY >= 0 && gridY < rows) {
-            grid[gridX][gridY] = !grid[gridX][gridY];
+            if (grid[gridX][gridY].alive) return;
+            grid[gridX][gridY].alive = !grid[gridX][gridY].alive;
+            drawIsoSquare(ctx, gridX, gridY, centerX, centerY, cellSize);
         }
     });
     function draw() {
@@ -137,7 +145,7 @@ function initGameOfLife() {
         drawGridLines();
         for (let x = 0; x < grid.length; x++) {
             for (let y = 0; y < grid[x].length; y++) {
-                if (grid[x][y]) {
+                if (grid[x][y].alive) {
                     drawIsoSquare(ctx, x, y, centerX, centerY, cellSize);
                 }
             }
@@ -145,9 +153,10 @@ function initGameOfLife() {
         ctx.globalAlpha = 1;
     }
     window.updateGrid = function () {
-        var newGrid = new Array(cols).fill(false).map(() => new Array(rows).fill(false));
+        var newGrid = new Array(cols).fill(null).map(() => new Array(rows).fill(null));
         for (let x = 0; x < grid.length; x++) {
             for (let y = 0; y < grid[x].length; y++) {
+                var cell = grid[x][y];
                 var aliveNeighbors = 0;
                 for (let i = -1; i <= 1; i++) {
                     for (let j = -1; j <= 1; j++) {
@@ -155,19 +164,20 @@ function initGameOfLife() {
                         var nx = x + i;
                         var ny = y + j;
                         if (nx < 0 || nx >= grid.length || ny < 0 || ny >= grid[x].length) continue;
-                        if (grid[nx][ny]) aliveNeighbors++;
+                        if (grid[nx][ny].alive) aliveNeighbors++;
                     }
                 }
-                if (grid[x][y] && (aliveNeighbors === 2 || aliveNeighbors === 3)) {
-                    newGrid[x][y] = true;
-                } else if (!grid[x][y] && aliveNeighbors === 3) {
-                    newGrid[x][y] = true;
-                }
+                newGrid[x][y] = {
+                    color: cell.color,
+                    alive: (cell.alive && (aliveNeighbors === 2 || aliveNeighbors === 3)) ||
+                        (!cell.alive && aliveNeighbors === 3),
+                    opacity: cell.alive ? Math.max(0, cell.opacity - 0.4) : 1.0
+                };
             }
         }
         grid = newGrid;
         draw();
     };
-    setInterval(window.updateGrid, 1000);
+    setInterval(window.updateGrid, 500);
     draw();
 }
