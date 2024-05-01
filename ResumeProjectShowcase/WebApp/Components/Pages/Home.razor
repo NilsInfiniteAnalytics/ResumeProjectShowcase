@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
 
 <PageTitle>Home - Under Construction</PageTitle>
 
@@ -52,7 +53,7 @@
 </style>
 
 <canvas id="gameCanvas"></canvas>
-<div class="panel home" style="left: 18%; top: 9%;"></div>
+<div class="panel home" style="left: 18%; top: 9%;" @onclick="@NavigateToGitHub"></div>
 <div class="panel about" style="left: 76%; top: 12%;"></div>
 <div class="panel contact" style="left: 9%; top: 70%;"></div>
 <div class="panel projects" style="left: 75%; top: 69%;"></div>
@@ -66,4 +67,6 @@
         }
         await base.OnAfterRenderAsync(firstRender);
     }
+
+    private void NavigateToGitHub() => NavigationManager.NavigateTo("https://github.com/NilsInfiniteAnalytics");
 }
