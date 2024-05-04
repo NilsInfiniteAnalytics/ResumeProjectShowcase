@@ -94,12 +94,12 @@
         { (int)PanelType.Contact, "/Contact" },
         { (int)PanelType.Projects, "/Projects" }
     };
-    Dictionary<int, string> _gridDrawMethodToJavascriptMethod = new()
+    readonly Dictionary<int, string> _gridDrawMethodToJavascriptMethod = new()
     {
         { (int)GridDrawMethods.GameOfLife, "gameOfLife" },
         { (int)GridDrawMethods.HeatEquation, "heatEquation" }
     };
-    List<KeyValuePair<int, string>> _gridDrawMethods = Enum.GetValues(typeof(GridDrawMethods))
+    readonly List<KeyValuePair<int, string>> _gridDrawMethods = Enum.GetValues(typeof(GridDrawMethods))
         .Cast<GridDrawMethods>()
         .Select(e => new KeyValuePair<int, string>((int)e, e.ToString()))
         .ToList();
