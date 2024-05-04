@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
-using ClassLibrary.GithubInteractionService.Models;
+using ClassLibrary.Modules.GitHubInteractions.Models;
 
-namespace ClassLibrary.GithubInteractionService
+namespace ClassLibrary.Modules.GitHubInteractions
 {
     internal class GithubInteractionService
     {
@@ -34,7 +34,7 @@ namespace ClassLibrary.GithubInteractionService
                                                              
                                  """;
             var variables = $"{{\"userName\": \"{userName}\"}}";
-            var body = JsonSerializer.Serialize(new { query = query, variables = variables });
+            var body = JsonSerializer.Serialize(new { query, variables });
             var response = await _httpClient.PostAsync("https://api.github.com/graphql",
                 new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
 

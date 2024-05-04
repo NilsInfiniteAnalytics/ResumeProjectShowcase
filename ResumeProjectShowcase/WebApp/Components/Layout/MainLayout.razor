@@ -1,6 +1,5 @@
 ﻿@inherits LayoutComponentBase
 @inject IJSRuntime JsRuntime
-@using ClassLibrary.Records
 
 <RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
     <RadzenHeader>
@@ -34,7 +33,7 @@
 
     static DateTime _currentTime = DateTime.Now;
 
-    string WelcomeText => $"{Greeting}, user!";
+    static string WelcomeText => $"{Greeting}, user!";
 
     static string Greeting => GetGreetingByTime();
 
@@ -65,6 +64,7 @@
     protected override Task OnInitializedAsync()
     {
         _timer = new Timer(TimerCallback, null, 0, 1000);
+        _sidebarExpanded = false;
         StateHasChanged();
         return base.OnInitializedAsync();
     }
@@ -73,9 +73,9 @@
     {
         if (firstRender)
         {
-            _windowSize = await JsRuntime.InvokeAsync<string>(JsFunctions.GetWindowSize);
-            await JsRuntime.InvokeVoidAsync(JsFunctions.GetClientTimezoneOffset);
-            await JsRuntime.InvokeVoidAsync(JsFunctions.TriggerResizeEvent);
+            _windowSize = await JsRuntime.InvokeAsync<string>("getWindowSize");
+            await JsRuntime.InvokeVoidAsync("getClientTimezoneOffset");
+            await JsRuntime.InvokeVoidAsync("triggerResize");
         }
         StateHasChanged();
         await base.OnAfterRenderAsync(firstRender);

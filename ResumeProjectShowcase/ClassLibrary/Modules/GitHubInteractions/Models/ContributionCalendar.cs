@@ -1,4 +1,4 @@
-﻿namespace ClassLibrary.GithubInteractionService.Models
+﻿namespace ClassLibrary.Modules.GitHubInteractions.Models
 {
     /// <summary>
     /// Reference GraphQL schema:
@@ -8,6 +8,6 @@
     internal class ContributionCalendar
     {
         public int TotalContributions { get; set; }
-        public List<ContributionCalendarWeek> Weeks { get; set; }
+        public required List<ContributionCalendarWeek> Weeks { get; set; }
     }
 }
