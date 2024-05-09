@@ -38,7 +38,7 @@ To get a local copy up and running follow these simple steps.
     ```sh
     dotnet run
     ```
-## Acknowledegments
+## Acknowledgements
 - [Radzen Components](https://www.radzen.com/)
 - [.NET](https://dotnet.microsoft.com/en-us/)
 - [Blazor](https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor)
