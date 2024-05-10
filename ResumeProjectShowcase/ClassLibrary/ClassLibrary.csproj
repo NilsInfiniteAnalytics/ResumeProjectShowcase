@@ -8,16 +8,15 @@
 
   <ItemGroup>
     <Compile Remove="Features\**" />
+    <Compile Remove="Interfaces\**" />
     <EmbeddedResource Remove="Features\**" />
+    <EmbeddedResource Remove="Interfaces\**" />
     <None Remove="Features\**" />
+    <None Remove="Interfaces\**" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="ResumeProjectShowcase.WebApp" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
   </ItemGroup>
 
 </Project>

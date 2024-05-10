@@ -21,6 +21,7 @@
 
 @code {
     int _selectedGridDrawMethod = (int)GridDrawMethods.GameOfLife;
+
     enum PanelType
     {
         Home,
@@ -28,11 +29,13 @@
         Contact,
         Projects
     }
+
     enum GridDrawMethods
     {
         GameOfLife,
         HeatEquation
     }
+
     Dictionary<int, string> _panelTypeToPath = new()
     {
         { (int)PanelType.Home, "/" },
@@ -40,15 +43,18 @@
         { (int)PanelType.Contact, "/Contact" },
         { (int)PanelType.Projects, "/Projects" }
     };
+
     readonly Dictionary<int, string> _gridDrawMethodToJavascriptMethod = new()
     {
         { (int)GridDrawMethods.GameOfLife, "gameOfLife" },
         { (int)GridDrawMethods.HeatEquation, "heatEquation" }
     };
+
     readonly List<KeyValuePair<int, string>> _gridDrawMethods = Enum.GetValues(typeof(GridDrawMethods))
         .Cast<GridDrawMethods>()
         .Select(e => new KeyValuePair<int, string>((int)e, e.ToString()))
         .ToList();
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -57,7 +63,9 @@
         }
         await base.OnAfterRenderAsync(firstRender);
     }
+
     private void NavigateToGitHub() => NavigationManager.NavigateTo("https://github.com/NilsInfiniteAnalytics");
+
     private async Task UpdateGridMethod()
     {
         await JsRuntime.InvokeVoidAsync("init" + _gridDrawMethodToJavascriptMethod[_selectedGridDrawMethod]);
