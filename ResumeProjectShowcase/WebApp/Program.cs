@@ -27,6 +27,5 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 app.UseAntiforgery(); 
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.Run();

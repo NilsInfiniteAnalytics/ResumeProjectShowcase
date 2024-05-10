@@ -37,19 +37,19 @@
 }
 
 .panel.home {
-    background-image: url('home.jpg');
+    background-image: url('Assets/home.jpg');
 }
 
 .panel.about {
-    background-image: url('hobby.jpg');
+    background-image: url('Assets/hobby.jpg');
 }
 
 .panel.contact {
-    background-image: url('about.jpg');
+    background-image: url('Assets/about.jpg');
 }
 
 .panel.projects {
-    background-image: url('projects.jpg');
+    background-image: url('Assets/projects.jpg');
 }
 
 .panel:hover {
