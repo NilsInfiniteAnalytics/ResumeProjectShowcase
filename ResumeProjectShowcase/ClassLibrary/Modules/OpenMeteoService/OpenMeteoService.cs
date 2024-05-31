@@ -16,11 +16,7 @@ namespace ClassLibrary.Modules.OpenMeteoService
             _archiveApiUrl = archiveApiUrl;
         }
 
-        public async Task<WeatherData?> GetWeatherDataAsync(
-            double latitude, 
-            double longitude, 
-            string startDate,
-            string endDate)
+        public async Task<WeatherData?> GetWeatherDataAsync(double latitude, double longitude, string startDate, string endDate)
         {
             var parameters = new
             {
