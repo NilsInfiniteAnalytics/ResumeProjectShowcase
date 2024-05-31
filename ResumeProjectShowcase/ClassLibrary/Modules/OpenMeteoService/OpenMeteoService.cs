@@ -1,10 +1,11 @@
 ﻿using System.Net.Http.Json;
+using System.Web;
 using ClassLibrary.Interfaces;
 using ClassLibrary.Models.OpenMeteoService;
 
 namespace ClassLibrary.Modules.OpenMeteoService
 {
-    public class OpenMeteoService : IOpenMeteoService
+    public sealed class OpenMeteoService : IOpenMeteoService
     {
         private readonly HttpClient _httpClient;
 
@@ -18,19 +19,21 @@ namespace ClassLibrary.Modules.OpenMeteoService
 
         public async Task<WeatherData?> GetWeatherDataAsync(double latitude, double longitude, string startDate, string endDate)
         {
-            var parameters = new
-            {
-                latitude,
-                longitude,
-                start_date = startDate,
-                end_date = endDate,
-                hourly = new[] { "temperature_2m", "relative_humidity_2m", "surface_pressure" },
-            };
-            var response = await _httpClient.PostAsJsonAsync(_archiveApiUrl, parameters);
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            query["latitude"] = latitude.ToString();
+            query["longitude"] = longitude.ToString();
+            query["start_date"] = startDate;
+            query["end_date"] = endDate;
+            query["hourly"] = "temperature_2m,relative_humidity_2m,surface_pressure";
+
+            var requestUri = $"{_archiveApiUrl}?{query.ToString()}";
+            var response = await _httpClient.GetAsync(requestUri);
+
             if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
+
             return await response.Content.ReadFromJsonAsync<WeatherData>();
         }
     }
