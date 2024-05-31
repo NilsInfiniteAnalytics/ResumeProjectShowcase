@@ -14,10 +14,11 @@
 </div>
 
 <canvas id="gameCanvas"></canvas>
-<div class="panel home" style="left: 18%; top: 9%;" @onclick="@NavigateToGitHub"></div>
+<div class="panel home" style="left: 9%; top: 9%;"></div>
+<div class="panel github" style="left: 37%; top: 5%;" @onclick="@NavigateToGitHub"></div>
 <div class="panel about" style="left: 76%; top: 12%;"></div>
 <div class="panel contact" style="left: 9%; top: 70%;"></div>
-<div class="panel projects" style="left: 75%; top: 69%;"></div>
+<div class="panel projects" style="left: 75%; top: 69%;" @onclick="NavigateToProjects"></div>
 
 @code {
     int _selectedGridDrawMethod = (int)GridDrawMethods.GameOfLife;
@@ -46,8 +47,8 @@
 
     readonly Dictionary<int, string> _gridDrawMethodToJavascriptMethod = new()
     {
-        { (int)GridDrawMethods.GameOfLife, "gameOfLife" },
-        { (int)GridDrawMethods.HeatEquation, "heatEquation" }
+        { (int)GridDrawMethods.GameOfLife, "initGameOfLife" },
+        { (int)GridDrawMethods.HeatEquation, "initHeatEquationSolver" }
     };
 
     readonly List<KeyValuePair<int, string>> _gridDrawMethods = Enum.GetValues(typeof(GridDrawMethods))
@@ -66,8 +67,10 @@
 
     private void NavigateToGitHub() => NavigationManager.NavigateTo("https://github.com/NilsInfiniteAnalytics");
 
+    private void NavigateToProjects() => NavigationManager.NavigateTo("/Projects");
+
     private async Task UpdateGridMethod()
     {
-        await JsRuntime.InvokeVoidAsync("init" + _gridDrawMethodToJavascriptMethod[_selectedGridDrawMethod]);
+        await JsRuntime.InvokeVoidAsync(_gridDrawMethodToJavascriptMethod[_selectedGridDrawMethod]);
     }
 }

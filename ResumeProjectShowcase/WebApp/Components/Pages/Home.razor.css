@@ -52,6 +52,10 @@
     background-image: url('Assets/projects.jpg');
 }
 
+.panel.github {
+    background-image: url('Assets/github.jpg');
+}
+
 .panel:hover {
     transform: scale(1.05);
     opacity: 0.9;

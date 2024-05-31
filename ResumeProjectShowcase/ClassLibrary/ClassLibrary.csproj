@@ -7,16 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Features\**" />
-    <Compile Remove="Interfaces\**" />
-    <EmbeddedResource Remove="Features\**" />
-    <EmbeddedResource Remove="Interfaces\**" />
-    <None Remove="Features\**" />
-    <None Remove="Interfaces\**" />
+    <InternalsVisibleTo Include="ResumeProjectShowcase.WebApp" />
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="ResumeProjectShowcase.WebApp" />
+    <Folder Include="Modules\GoogleMapsService\" />
   </ItemGroup>
 
 </Project>
