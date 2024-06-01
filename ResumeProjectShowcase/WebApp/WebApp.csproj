@@ -8,9 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.10.4" />
+    <PackageReference Include="Azure.Identity" Version="1.11.3" />
+    <PackageReference Include="Microsoft.ApplicationInsights.SnapshotCollector" Version="1.4.6" />
     <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="7.2.0" />
-    <PackageReference Include="Radzen.Blazor" Version="4.32.2" />
+    <PackageReference Include="Radzen.Blazor" Version="4.32.3" />
   </ItemGroup>
 
   <ItemGroup>

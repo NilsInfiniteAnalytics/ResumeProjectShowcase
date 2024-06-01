@@ -5,37 +5,51 @@ using ClassLibrary.Interfaces;
 using ClassLibrary.Modules.OpenMeteoService;
 
 var builder = WebApplication.CreateBuilder(args);
-// Add Azure App Configuration to the container.
-var azAppConfigConnection = builder.Configuration["AppConfig"];
-if (!string.IsNullOrEmpty(azAppConfigConnection))
+try
 {
-    // Use the connection string if it is available.
-    builder.Configuration.AddAzureAppConfiguration(options =>
+    var azAppConfigConnection = builder.Configuration["AppConfig"];
+    var azAppConfigEndpoint = Environment.GetEnvironmentVariable("AZURE_APPCONFIGURATION_ENDPOINT");
+    if (!string.IsNullOrEmpty(azAppConfigConnection))
     {
-        options.Connect(azAppConfigConnection)
-        .ConfigureRefresh(refresh =>
+        builder.Configuration.AddAzureAppConfiguration(options =>
         {
-            // All configuration values will be refreshed if the sentinel key changes.
-            refresh.Register("TestApp:Settings:Sentinel", refreshAll: true);
+            options.Connect(azAppConfigConnection)
+                .ConfigureRefresh(refresh =>
+                {
+                    // All configuration values will be refreshed if the sentinel key changes.
+                    refresh.Register("TestApp:Settings:Sentinel", refreshAll: true);
+                });
         });
-    });
+    }
+    else if (!string.IsNullOrEmpty(azAppConfigEndpoint))
+    {
+        builder.Configuration.AddAzureAppConfiguration(options =>
+        {
+            options.Connect(new Uri(azAppConfigEndpoint), new DefaultAzureCredential())
+                .ConfigureRefresh(refresh =>
+                {
+                    // All configuration values will be refreshed if the sentinel key changes.
+                    refresh.Register("TestApp:Settings:Sentinel", refreshAll: true);
+                });
+        });
+    }
+    else if (builder.Environment.IsDevelopment())
+    {
+        // Use the local.settings.json file for local development.
+        builder.Configuration.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
+    }
+    else
+    {
+        throw new Exception("No valid Azure App Configuration connection string or endpoint found.");
+    }
+    builder.Services.AddAzureAppConfiguration();
 }
-else if (Uri.TryCreate(builder.Configuration["Endpoints:AppConfig"], UriKind.Absolute, out var endpoint))
+catch (Exception e)
 {
-    // Use Azure Active Directory authentication.
-    // The identity of this app should be assigned 'App Configuration Data Reader' or 'App Configuration Data Owner' role in App Configuration.
-    // For more information, please visit https://aka.ms/vs/azure-app-configuration/concept-enable-rbac
-    builder.Configuration.AddAzureAppConfiguration(options =>
-    {
-        options.Connect(endpoint, new VisualStudioCredential())
-        .ConfigureRefresh(refresh =>
-        {
-            // All configuration values will be refreshed if the sentinel key changes.
-            refresh.Register("TestApp:Settings:Sentinel", refreshAll: true);
-        });
-    });
+    System.Diagnostics.Trace.TraceError($"Error: {e.Message}");
+    throw;
 }
-builder.Services.AddAzureAppConfiguration();
+
 
 builder.Services
     .AddRazorComponents()

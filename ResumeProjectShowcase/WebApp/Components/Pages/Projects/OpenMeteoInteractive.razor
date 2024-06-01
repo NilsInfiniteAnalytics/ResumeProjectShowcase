@@ -1,21 +1,24 @@
 ﻿@page "/OpenMeteoInteractive"
+@inject IJSRuntime JSRuntime
 @using ClassLibrary.Models.OpenMeteoService
-@inject NavigationManager NavigationManager
 @inject IOpenMeteoService OpenMeteoService
 
 <PageTitle>Open Meteo Interactive Page - Under Construction</PageTitle>
 
 <RadzenGoogleMap style="height: 400px"
                  Zoom="@_zoom"
-                 Center="@(new GoogleMapPosition() { Lat = _initialPosition.Latitude, Lng = _initialPosition.Longitude })"
+                 ApiKey="AIzaSyAaAyWRr-uflaYNL6jytN_K1ubG-oeLdgk"
+                 Center="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })"
                  MapClick="OnMapClick">
-    <RadzenGoogleMapMarker Position="@(new GoogleMapPosition() { Lat = _initialPosition.Latitude, Lng = _initialPosition.Longitude })" />
+    <RadzenGoogleMapMarker Title="Selection" Label="Selected Area" Position="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })" />
 </RadzenGoogleMap>
 
 <RadzenFieldset Legend="Select Date Range">
     <RadzenDatePicker TValue="DateTime?" @bind-Value="_startDate" Placeholder="Start Date" />
     <RadzenDatePicker TValue="DateTime?" @bind-Value="_endDate" Placeholder="End Date" />
 </RadzenFieldset>
+
+@_mapClickedString
 
 <RadzenButton Text="Get Weather Data" Click="GetWeatherData" />
 
@@ -54,16 +57,18 @@
 }
 
 @code {
-    private LatLng _initialPosition = new() { Latitude = 43.258509, Longitude = -77.606445 };
+    private LatLng _markerPosition = new() { Latitude = 43.258509, Longitude = -77.606445 };
     private DateTime? _startDate;
     private DateTime? _endDate;
     private WeatherData? _weatherData;
-    private readonly int _zoom = 5;
+    private readonly int _zoom = 10;
+    private string? _mapClickedString;
 
-    private async Task OnMapClick(GoogleMapClickEventArgs args)
+    private void OnMapClick(GoogleMapClickEventArgs args)
     {
-        _initialPosition.Latitude = args.Position.Lat;
-        _initialPosition.Longitude = args.Position.Lng;
+        _markerPosition.Latitude = args.Position.Lat;
+        _markerPosition.Longitude = args.Position.Lng;
+        _mapClickedString = $"Map Clicked at Latitude: {args.Position.Lat}, Longitude: {args.Position.Lng}";
         StateHasChanged();
     }
 
@@ -71,7 +76,7 @@
     {
         if (_startDate.HasValue && _endDate.HasValue)
         {
-            _weatherData = await OpenMeteoService.GetWeatherDataAsync(_initialPosition.Latitude, _initialPosition.Longitude, _startDate.Value.ToString("yyyy-MM-dd"), _endDate.Value.ToString("yyyy-MM-dd"));
+            _weatherData = await OpenMeteoService.GetWeatherDataAsync(_markerPosition.Latitude, _markerPosition.Longitude, _startDate.Value.ToString("yyyy-MM-dd"), _endDate.Value.ToString("yyyy-MM-dd"));
             StateHasChanged();
         }
     }
