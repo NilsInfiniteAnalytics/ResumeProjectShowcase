@@ -1,6 +1,5 @@
 ﻿using ClassLibrary.Interfaces;
 using ClassLibrary.Modules.OpenMeteoService;
-using ClassLibrary.Models.OpenMeteoService;
 
 namespace ClassLibrary.Tests.Modules
 {

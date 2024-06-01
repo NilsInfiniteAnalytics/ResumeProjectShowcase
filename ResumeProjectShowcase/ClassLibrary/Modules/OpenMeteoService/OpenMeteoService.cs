@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Web;
 using ClassLibrary.Interfaces;
 using ClassLibrary.Models.OpenMeteoService;
@@ -37,9 +36,7 @@ namespace ClassLibrary.Modules.OpenMeteoService
 
             var stringData = await response.Content.ReadAsStringAsync();
             using var document = JsonDocument.Parse(stringData);
-
             var root = document.RootElement;
-
             var weatherData = new WeatherData
             {
                 Latitude = root.GetProperty("latitude").GetDouble(),
@@ -62,7 +59,6 @@ namespace ClassLibrary.Modules.OpenMeteoService
                     SurfacePressure = root.GetProperty("hourly").GetProperty("surface_pressure").EnumerateArray().Select(x => x.GetDouble()).ToList()
                 }
             };
-
             return weatherData;
         }
     }
