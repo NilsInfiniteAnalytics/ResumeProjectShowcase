@@ -32,8 +32,9 @@ namespace ClassLibrary.Tests.Modules
 
             // Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual(latitude, result.Latitude);
-            Assert.AreEqual(longitude, result.Longitude);
+            Assert.IsTrue(result.HourlyWeatherDataLists.Temperature2m.Count > 0);
+            Assert.IsTrue(result.HourlyWeatherDataLists.RelativeHumidity2m.Count > 0);
+            Assert.IsTrue(result.HourlyWeatherDataLists.SurfacePressure.Count > 0);
         }
     }
 }
