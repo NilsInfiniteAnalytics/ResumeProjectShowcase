@@ -1,16 +1,18 @@
 ﻿@page "/OpenMeteoInteractive"
-@inject IJSRuntime JSRuntime
-@using ClassLibrary.Models.OpenMeteoService
 @inject IOpenMeteoService OpenMeteoService
 
 <PageTitle>Open Meteo Interactive Page - Under Construction</PageTitle>
 
-<RadzenGoogleMap style="height: 400px"
+<RadzenGoogleMap style="height: 100%"
                  Zoom="@_zoom"
                  ApiKey="AIzaSyAaAyWRr-uflaYNL6jytN_K1ubG-oeLdgk"
                  Center="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })"
                  MapClick="OnMapClick">
-    <RadzenGoogleMapMarker Title="Selection" Label="Selected Area" Position="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })" />
+    <Markers>
+        <RadzenGoogleMapMarker Title="Selection" 
+                               Label="Selected Location" 
+                               Position="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })"/>
+    </Markers>
 </RadzenGoogleMap>
 
 <RadzenFieldset Legend="Select Date Range">
@@ -18,9 +20,9 @@
     <RadzenDatePicker TValue="DateTime?" @bind-Value="_endDate" Placeholder="End Date" />
 </RadzenFieldset>
 
-@_mapClickedString
-
 <RadzenButton Text="Get Weather Data" Click="GetWeatherData" />
+
+<RadzenDialog></RadzenDialog>
 
 @if (_weatherData != null)
 {
@@ -62,14 +64,24 @@
     private DateTime? _endDate;
     private WeatherData? _weatherData;
     private readonly int _zoom = 10;
-    private string? _mapClickedString;
 
     private void OnMapClick(GoogleMapClickEventArgs args)
     {
         _markerPosition.Latitude = args.Position.Lat;
         _markerPosition.Longitude = args.Position.Lng;
-        _mapClickedString = $"Map Clicked at Latitude: {args.Position.Lat}, Longitude: {args.Position.Lng}";
         StateHasChanged();
+    }
+
+    private async Task OnMarkerClick()
+    {
+        await DialogService.OpenAsync<WeatherDataDialog>(
+            "Request Weather Data",
+            new Dictionary<string, object>
+            {
+                { "LatLng", _markerPosition }, 
+                { "GetWeatherData", EventCallback.Factory.Create(this, GetWeatherData) }
+            },
+            new DialogOptions { Width = "600px", Height = "400px" });
     }
 
     private async Task GetWeatherData()
@@ -79,11 +91,5 @@
             _weatherData = await OpenMeteoService.GetWeatherDataAsync(_markerPosition.Latitude, _markerPosition.Longitude, _startDate.Value.ToString("yyyy-MM-dd"), _endDate.Value.ToString("yyyy-MM-dd"));
             StateHasChanged();
         }
-    }
-
-    private class LatLng
-    {
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
     }
 }
