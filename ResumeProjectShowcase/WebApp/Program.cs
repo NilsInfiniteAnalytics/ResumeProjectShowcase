@@ -5,7 +5,6 @@ using ClassLibrary.Interfaces;
 using ClassLibrary.Modules.OpenMeteoService;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // Add Azure App Configuration to the container.
 var azAppConfigConnection = builder.Configuration["AppConfig"];
 if (!string.IsNullOrEmpty(azAppConfigConnection))
@@ -49,7 +48,11 @@ builder.Services
 var openMeteoArchiveApiUrl = builder.Configuration["OpenMeteoArchiveApiUrl"];
 if(!string.IsNullOrEmpty(openMeteoArchiveApiUrl))
 {
-    builder.Services.AddSingleton<IOpenMeteoService, OpenMeteoService>();
+    builder.Services.AddSingleton<IOpenMeteoService>(sp =>
+    {
+        var httpClient = sp.GetRequiredService<HttpClient>();
+        return new OpenMeteoService(httpClient, openMeteoArchiveApiUrl);
+    });
 }
 
 var app = builder.Build();

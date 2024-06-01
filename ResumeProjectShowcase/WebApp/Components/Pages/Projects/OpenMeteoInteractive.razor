@@ -1,0 +1,84 @@
+﻿@page "/OpenMeteoInteractive"
+@using ClassLibrary.Models.OpenMeteoService
+@inject NavigationManager NavigationManager
+@inject IOpenMeteoService OpenMeteoService
+
+<PageTitle>Open Meteo Interactive Page - Under Construction</PageTitle>
+
+<RadzenGoogleMap style="height: 400px"
+                 Zoom="@_zoom"
+                 Center="@(new GoogleMapPosition() { Lat = _initialPosition.Latitude, Lng = _initialPosition.Longitude })"
+                 MapClick="OnMapClick">
+    <RadzenGoogleMapMarker Position="@(new GoogleMapPosition() { Lat = _initialPosition.Latitude, Lng = _initialPosition.Longitude })" />
+</RadzenGoogleMap>
+
+<RadzenFieldset Legend="Select Date Range">
+    <RadzenDatePicker TValue="DateTime?" @bind-Value="_startDate" Placeholder="Start Date" />
+    <RadzenDatePicker TValue="DateTime?" @bind-Value="_endDate" Placeholder="End Date" />
+</RadzenFieldset>
+
+<RadzenButton Text="Get Weather Data" Click="GetWeatherData" />
+
+@if (_weatherData != null)
+{
+    <RadzenCard>
+        <h4>Weather Data</h4>
+        <p>Latitude: @_weatherData.Latitude</p>
+        <p>Longitude: @_weatherData.Longitude</p>
+        <p>Timezone: @_weatherData.Timezone</p>
+        <p>Timezone Abbreviation: @_weatherData.TimezoneAbbreviation</p>
+        <p>UTC Offset Seconds: @_weatherData.UtcOffsetSeconds</p>
+        <h5>Hourly Data</h5>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Temperature (°C)</th>
+                    <th>Humidity (%)</th>
+                    <th>Pressure (hPa)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (var i = 0; i < _weatherData.HourlyWeatherDataLists.Time.Count; i++)
+                {
+                    <tr>
+                        <td>@_weatherData.HourlyWeatherDataLists.Time[i]</td>
+                        <td>@_weatherData.HourlyWeatherDataLists.Temperature2m[i]</td>
+                        <td>@_weatherData.HourlyWeatherDataLists.RelativeHumidity2m[i]</td>
+                        <td>@_weatherData.HourlyWeatherDataLists.SurfacePressure[i]</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </RadzenCard>
+}
+
+@code {
+    private LatLng _initialPosition = new() { Latitude = 43.258509, Longitude = -77.606445 };
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+    private WeatherData? _weatherData;
+    private readonly int _zoom = 5;
+
+    private async Task OnMapClick(GoogleMapClickEventArgs args)
+    {
+        _initialPosition.Latitude = args.Position.Lat;
+        _initialPosition.Longitude = args.Position.Lng;
+        StateHasChanged();
+    }
+
+    private async Task GetWeatherData()
+    {
+        if (_startDate.HasValue && _endDate.HasValue)
+        {
+            _weatherData = await OpenMeteoService.GetWeatherDataAsync(_initialPosition.Latitude, _initialPosition.Longitude, _startDate.Value.ToString("yyyy-MM-dd"), _endDate.Value.ToString("yyyy-MM-dd"));
+            StateHasChanged();
+        }
+    }
+
+    private class LatLng
+    {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+}

@@ -18,7 +18,7 @@
 <div class="panel github" style="left: 37%; top: 5%;" @onclick="@NavigateToGitHub"></div>
 <div class="panel about" style="left: 76%; top: 12%;"></div>
 <div class="panel contact" style="left: 9%; top: 70%;"></div>
-<div class="panel projects" style="left: 75%; top: 69%;" @onclick="NavigateToProjects"></div>
+<div class="panel projects" style="left: 75%; top: 69%;" @onclick="NavigateToProjectsDirectory"></div>
 
 @code {
     int _selectedGridDrawMethod = (int)GridDrawMethods.GameOfLife;
@@ -67,7 +67,7 @@
 
     private void NavigateToGitHub() => NavigationManager.NavigateTo("https://github.com/NilsInfiniteAnalytics");
 
-    private void NavigateToProjects() => NavigationManager.NavigateTo("/Projects");
+    private void NavigateToProjectsDirectory() => NavigationManager.NavigateTo("/ProjectsDirectory");
 
     private async Task UpdateGridMethod()
     {
