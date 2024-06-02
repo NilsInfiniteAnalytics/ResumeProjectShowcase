@@ -3,7 +3,7 @@
 
 <PlotlyChart @bind-Config="_config"
              @bind-Layout="_layout"
-             @bind-Data="data"
+             @bind-Data="_data"
              @ref="_chart" />
 
 @code {
@@ -17,12 +17,12 @@
     PlotlyChart _chart = new();
     Config _config = new();
     Layout _layout = new();
-    IList<ITrace> data;
+    IList<ITrace>? _data;
 
     protected override void OnInitialized()
     {
         if (WeatherChartData is null) return;
-        var timeLabels = WeatherChartData.Select(w => (object)w.Time).ToList();
+        var timeLabels = WeatherChartData.Select(w => (object)w.Time!).ToList();
         var values = WeatherChartData.Select(w => (object)w.Value).ToList();
         if (values.Count == 0) return;
         _config = new()
@@ -45,7 +45,7 @@
                     }
                 ]
             };
-        data = new List<ITrace>
+        _data = new List<ITrace>
         {
             new Scatter
             {
