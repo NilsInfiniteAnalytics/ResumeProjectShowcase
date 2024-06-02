@@ -16,17 +16,10 @@
     </Markers>
 </RadzenGoogleMap>
 
-<RadzenFieldset Legend="Select Date Range">
-    <RadzenDatePicker TValue="DateTime?" @bind-Value="_startDate" Placeholder="Start Date" />
-    <RadzenDatePicker TValue="DateTime?" @bind-Value="_endDate" Placeholder="End Date" />
-</RadzenFieldset>
-
 <RadzenDialog></RadzenDialog>
 
 @code {
-    private LatLng _markerPosition = new() { Latitude = 43.258509, Longitude = -77.606445 };
-    private DateTime? _startDate;
-    private DateTime? _endDate;
+    private readonly LatLng _markerPosition = new() { Latitude = 43.258509, Longitude = -77.606445 };
     private readonly int _zoom = 10;
 
     private void OnMapClick(GoogleMapClickEventArgs args)

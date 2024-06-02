@@ -3,7 +3,7 @@
 
 <RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
     <RadzenHeader>
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+        <RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
             <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
             <RadzenLabel Text="@_windowSize" Style="margin-right: 20px;" />
             <RadzenLabel Text="@_currentTime.ToString("HH:mm:ss")" Style="margin-right: 20px;" />

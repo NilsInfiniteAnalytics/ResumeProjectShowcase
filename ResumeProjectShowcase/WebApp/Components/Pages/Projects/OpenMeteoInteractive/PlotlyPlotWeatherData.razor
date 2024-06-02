@@ -1,0 +1,60 @@
+﻿@using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.Traces.ScatterLib
+
+<PlotlyChart @bind-Config="_config"
+             @bind-Layout="_layout"
+             @bind-Data="data"
+             @ref="_chart" />
+
+@code {
+    [Parameter]
+    public IEnumerable<WeatherChartData>? WeatherChartData { get; set; }
+    [Parameter]
+    public required string YAxisUnits { get; set; }
+    [Parameter]
+    public required string PlotName { get; set; }
+
+    PlotlyChart _chart = new();
+    Config _config = new();
+    Layout _layout = new();
+    IList<ITrace> data;
+
+    protected override void OnInitialized()
+    {
+        if (WeatherChartData is null) return;
+        var timeLabels = WeatherChartData.Select(w => (object)w.Time).ToList();
+        var values = WeatherChartData.Select(w => (object)w.Value).ToList();
+        if (values.Count == 0) return;
+        _config = new()
+            {
+                Responsive = true
+            };
+        _layout = new()
+            {
+                Title = new Title
+                {
+                    Text = GetType().Name
+                },
+                YAxis = [
+                    new YAxis()
+                    {
+                        Title = new()
+                        {
+                            Text = YAxisUnits
+                        }
+                    }
+                ]
+            };
+        data = new List<ITrace>
+        {
+            new Scatter
+            {
+                Name = PlotName,
+                Mode = ModeFlag.Lines | ModeFlag.Markers,
+                X = timeLabels,
+                Y = values,
+            }
+        };
+        StateHasChanged();
+    }
+}
