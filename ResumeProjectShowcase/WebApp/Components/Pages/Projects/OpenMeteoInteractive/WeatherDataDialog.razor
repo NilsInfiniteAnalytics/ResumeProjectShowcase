@@ -1,43 +1,46 @@
 ﻿@page "/WeatherDataDialog"
 @inject DialogService DialogService
-@inject NotificationService NotificationService
+@inject IOpenMeteoService OpenMeteoService
+
 
 <RadzenFieldset Legend="Select Date Range">
     <RadzenDatePicker TValue="DateTime?" @bind-Value="_startDate" Placeholder="Start Date" />
     <RadzenDatePicker TValue="DateTime?" @bind-Value="_endDate" Placeholder="End Date" />
 </RadzenFieldset>
 
+if (_weatherData != null)
+{
+}
+
 <RadzenButton Text="Submit" Click="Submit" />
 <RadzenButton Text="Cancel" Click="Cancel" />
 
 @code {
-    [Parameter] 
-    public LatLng LatLng { get; set; }
-    [Parameter] 
-    public EventCallback<(DateTime StartDate, DateTime EndDate)> GetWeatherData { get; set; }
+    [Parameter]
+    public required LatLng LatLng { get; set; }
 
     private DateTime? _startDate;
     private DateTime? _endDate;
+    private WeatherData _weatherData = null!;
+
+    private IEnumerable<WeatherChartData> GetWeatherChartData(List<double> values)
+    {
+        var times = _weatherData.HourlyWeatherDataLists.Time;
+        return times.Select((t, i) => new WeatherChartData { Time = t, Value = values[i] }).ToList();
+    }
 
     private async Task Submit()
     {
-        if(_endDate > _startDate)
-        {
-            await GetWeatherData.InvokeAsync((_startDate.Value, _endDate.Value));
-            DialogService.Close();
-        }
-        else
-        {
-            NotificationService.Notify(NotificationSeverity.Warning, "Warning", "End date must be greater than start date.");
-        }
+        await GetWeatherData();
+    }
+
+    private async Task GetWeatherData()
+    {
         if (_startDate.HasValue && _endDate.HasValue)
         {
-            await GetWeatherData.InvokeAsync((_startDate.Value, _endDate.Value));
-            DialogService.Close();
-        }
-        else
-        {
-            NotificationService.Notify(NotificationSeverity.Warning, "Warning", "Please select both start and end dates.");
+            var data = await OpenMeteoService.GetWeatherDataAsync(LatLng.Latitude, LatLng.Longitude, _startDate.Value.ToString("yyyy-MM-dd"), _endDate.Value.ToString("yyyy-MM-dd"));
+            _weatherData = data ?? null!;
+            StateHasChanged();
         }
     }
 

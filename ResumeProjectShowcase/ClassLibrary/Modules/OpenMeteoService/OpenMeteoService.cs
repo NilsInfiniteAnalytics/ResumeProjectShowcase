@@ -37,7 +37,9 @@ namespace ClassLibrary.Modules.OpenMeteoService
             var stringData = await response.Content.ReadAsStringAsync();
             using var document = JsonDocument.Parse(stringData);
             var root = document.RootElement;
-            var weatherData = new WeatherData
+            try
+            {
+                var weatherData = new WeatherData
             {
                 Latitude = root.GetProperty("latitude").GetDouble(),
                 Longitude = root.GetProperty("longitude").GetDouble(),
@@ -59,7 +61,13 @@ namespace ClassLibrary.Modules.OpenMeteoService
                     SurfacePressure = root.GetProperty("hourly").GetProperty("surface_pressure").EnumerateArray().Select(x => x.GetDouble()).ToList()
                 }
             };
-            return weatherData;
+                return weatherData;
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Trace.TraceError($"Error: {e.Message}");
+                return null;
+            }
         }
     }
 }

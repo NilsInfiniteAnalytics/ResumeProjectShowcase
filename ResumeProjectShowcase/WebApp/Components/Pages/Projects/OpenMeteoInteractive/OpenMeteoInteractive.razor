@@ -1,6 +1,5 @@
 ﻿@page "/OpenMeteoInteractive"
 @inject DialogService DialogService
-@inject IOpenMeteoService OpenMeteoService
 
 <PageTitle>Open Meteo Interactive Page - Under Construction</PageTitle>
 
@@ -8,11 +7,12 @@
                  Zoom="@_zoom"
                  ApiKey="AIzaSyAaAyWRr-uflaYNL6jytN_K1ubG-oeLdgk"
                  Center="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })"
-                 MapClick="OnMapClick">
+                 MapClick="OnMapClick"
+                 MarkerClick="OnMarkerClick">
     <Markers>
-        <RadzenGoogleMapMarker Title="Selection" 
-                               Label="Selected Location" 
-                               Position="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })"/>
+        <RadzenGoogleMapMarker Title="Selection"
+                               Label="Selected Location"
+                               Position="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })" />
     </Markers>
 </RadzenGoogleMap>
 
@@ -21,49 +21,12 @@
     <RadzenDatePicker TValue="DateTime?" @bind-Value="_endDate" Placeholder="End Date" />
 </RadzenFieldset>
 
-<RadzenButton Text="Get Weather Data" Click="GetWeatherData" />
-
 <RadzenDialog></RadzenDialog>
-
-@if (_weatherData != null)
-{
-    <RadzenCard>
-        <h4>Weather Data</h4>
-        <p>Latitude: @_weatherData.Latitude</p>
-        <p>Longitude: @_weatherData.Longitude</p>
-        <p>Timezone: @_weatherData.Timezone</p>
-        <p>Timezone Abbreviation: @_weatherData.TimezoneAbbreviation</p>
-        <p>UTC Offset Seconds: @_weatherData.UtcOffsetSeconds</p>
-        <h5>Hourly Data</h5>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Temperature (°C)</th>
-                    <th>Humidity (%)</th>
-                    <th>Pressure (hPa)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (var i = 0; i < _weatherData.HourlyWeatherDataLists.Time.Count; i++)
-                {
-                    <tr>
-                        <td>@_weatherData.HourlyWeatherDataLists.Time[i]</td>
-                        <td>@_weatherData.HourlyWeatherDataLists.Temperature2m[i]</td>
-                        <td>@_weatherData.HourlyWeatherDataLists.RelativeHumidity2m[i]</td>
-                        <td>@_weatherData.HourlyWeatherDataLists.SurfacePressure[i]</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </RadzenCard>
-}
 
 @code {
     private LatLng _markerPosition = new() { Latitude = 43.258509, Longitude = -77.606445 };
     private DateTime? _startDate;
     private DateTime? _endDate;
-    private WeatherData? _weatherData;
     private readonly int _zoom = 10;
 
     private void OnMapClick(GoogleMapClickEventArgs args)
@@ -75,22 +38,20 @@
 
     private async Task OnMarkerClick()
     {
-        await DialogService.OpenAsync<WeatherDataDialog>(
+        try
+        {
+            await DialogService.OpenAsync<WeatherDataDialog>(
             "Request Weather Data",
             new Dictionary<string, object>
-            {
-                { "LatLng", _markerPosition }, 
-                { "GetWeatherData", EventCallback.Factory.Create(this, GetWeatherData) }
-            },
-            new DialogOptions { Width = "600px", Height = "400px" });
-    }
-
-    private async Task GetWeatherData()
-    {
-        if (_startDate.HasValue && _endDate.HasValue)
+                    {
+                        { "LatLng", _markerPosition },
+                    },
+            new DialogOptions { Width = "50vw", Height = "25vh" });
+        }
+        catch (Exception e)
         {
-            _weatherData = await OpenMeteoService.GetWeatherDataAsync(_markerPosition.Latitude, _markerPosition.Longitude, _startDate.Value.ToString("yyyy-MM-dd"), _endDate.Value.ToString("yyyy-MM-dd"));
-            StateHasChanged();
+            Console.WriteLine(e);
+            throw;
         }
     }
 }
