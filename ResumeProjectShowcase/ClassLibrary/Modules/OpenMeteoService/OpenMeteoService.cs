@@ -3,46 +3,45 @@ using System.Text.Json;
 using System.Web;
 using ClassLibrary.Interfaces;
 using ClassLibrary.Models.OpenMeteoService;
+namespace ClassLibrary.Modules.OpenMeteoService;
 
-namespace ClassLibrary.Modules.OpenMeteoService
+public sealed class OpenMeteoService : IOpenMeteoService
 {
-    public sealed class OpenMeteoService : IOpenMeteoService
+    private readonly HttpClient _httpClient;
+
+    private readonly string _archiveApiUrl;
+
+    public OpenMeteoService(HttpClient httpClient, string archiveApiUrl)
     {
-        private readonly HttpClient _httpClient;
+        _httpClient = httpClient;
+        _archiveApiUrl = archiveApiUrl;
+    }
 
-        private readonly string _archiveApiUrl;
+    public async Task<WeatherData?> GetWeatherDataAsync(LatLng latLng, DateOnly startDate, DateOnly endDate)
+    {
+        var query = HttpUtility.ParseQueryString(string.Empty);
+        query["latitude"] = latLng.Latitude.ToString(CultureInfo.InvariantCulture);
+        query["longitude"] = latLng.Longitude.ToString(CultureInfo.InvariantCulture);
+        var startDateString = startDate.ToString("yyyy-MM-dd");
+        var endDateString = endDate.ToString("yyyy-MM-dd");
+        query["start_date"] = startDateString;
+        query["end_date"] = endDateString;
+        query["hourly"] = "temperature_2m,relative_humidity_2m,surface_pressure";
 
-        public OpenMeteoService(HttpClient httpClient, string archiveApiUrl)
+        var requestUri = $"{_archiveApiUrl}?{query.ToString()}";
+        var response = await _httpClient.GetAsync(requestUri);
+
+        if (!response.IsSuccessStatusCode)
         {
-            _httpClient = httpClient;
-            _archiveApiUrl = archiveApiUrl;
+            return null;
         }
 
-        public async Task<WeatherData?> GetWeatherDataAsync(LatLng latLng, DateOnly startDate, DateOnly endDate)
+        var stringData = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(stringData);
+        var root = document.RootElement;
+        try
         {
-            var query = HttpUtility.ParseQueryString(string.Empty);
-            query["latitude"] = latLng.Latitude.ToString(CultureInfo.InvariantCulture);
-            query["longitude"] = latLng.Longitude.ToString(CultureInfo.InvariantCulture);
-            var startDateString = startDate.ToString("yyyy-MM-dd");
-            var endDateString = endDate.ToString("yyyy-MM-dd");
-            query["start_date"] = startDateString;
-            query["end_date"] = endDateString;
-            query["hourly"] = "temperature_2m,relative_humidity_2m,surface_pressure";
-
-            var requestUri = $"{_archiveApiUrl}?{query.ToString()}";
-            var response = await _httpClient.GetAsync(requestUri);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return null;
-            }
-
-            var stringData = await response.Content.ReadAsStringAsync();
-            using var document = JsonDocument.Parse(stringData);
-            var root = document.RootElement;
-            try
-            {
-                var weatherData = new WeatherData
+            var weatherData = new WeatherData
             {
                 Latitude = root.GetProperty("latitude").GetDouble(),
                 Longitude = root.GetProperty("longitude").GetDouble(),
@@ -64,13 +63,12 @@ namespace ClassLibrary.Modules.OpenMeteoService
                     SurfacePressure = root.GetProperty("hourly").GetProperty("surface_pressure").EnumerateArray().Select(x => x.GetDouble()).ToList()
                 }
             };
-                return weatherData;
-            }
-            catch (Exception e)
-            {
-                System.Diagnostics.Trace.TraceError($"Error: {e.Message}");
-                return null;
-            }
+            return weatherData;
+        }
+        catch (Exception e)
+        {
+            System.Diagnostics.Trace.TraceError($"Error: {e.Message}");
+            return null;
         }
     }
 }
