@@ -61,6 +61,7 @@
                     Severity = NotificationSeverity.Error,
                     Duration = 4000,
                     SummaryContent = ns =>@<RadzenText TextStyle="TextStyle.H6">Failed to open dialog!</RadzenText>,
+                    DetailContent = ns =>@<RadzenText>@e.Message</RadzenText>,
             });
         }
     }
