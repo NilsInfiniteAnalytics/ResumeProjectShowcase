@@ -1,4 +1,5 @@
 ﻿using ClassLibrary.Interfaces;
+using ClassLibrary.Models.OpenMeteoService;
 using ClassLibrary.Modules.OpenMeteoService;
 
 namespace ClassLibrary.Tests.Modules
@@ -23,11 +24,16 @@ namespace ClassLibrary.Tests.Modules
             // Arrange
             const double latitude = 43.258509;
             const double longitude = -77.606445;
-            const string startDate = "2024-05-15";
-            const string endDate = "2024-05-29";
+            var latLng = new LatLng
+            {
+                Latitude = latitude,
+                Longitude = longitude
+            };
+            var startDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
+            var endDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-5));
 
             // Act
-            var result = await _openMeteoService.GetWeatherDataAsync(latitude, longitude, startDate, endDate);
+            var result = await _openMeteoService.GetWeatherDataAsync(latLng, startDate, endDate);
 
             // Assert
             Assert.IsNotNull(result);

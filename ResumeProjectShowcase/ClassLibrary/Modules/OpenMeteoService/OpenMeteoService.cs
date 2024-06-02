@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Text.Json;
 using System.Web;
 using ClassLibrary.Interfaces;
 using ClassLibrary.Models.OpenMeteoService;
@@ -17,13 +18,13 @@ namespace ClassLibrary.Modules.OpenMeteoService
             _archiveApiUrl = archiveApiUrl;
         }
 
-        public async Task<WeatherData?> GetWeatherDataAsync(double latitude, double longitude, string startDate, string endDate)
+        public async Task<WeatherData?> GetWeatherDataAsync(LatLng latLng, DateOnly startDate, DateOnly endDate)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            query["latitude"] = latitude.ToString();
-            query["longitude"] = longitude.ToString();
-            query["start_date"] = startDate;
-            query["end_date"] = endDate;
+            query["latitude"] = latLng.Latitude.ToString(CultureInfo.InvariantCulture);
+            query["longitude"] = latLng.Longitude.ToString(CultureInfo.InvariantCulture);
+            query["start_date"] = startDate.ToString();
+            query["end_date"] = endDate.ToString();
             query["hourly"] = "temperature_2m,relative_humidity_2m,surface_pressure";
 
             var requestUri = $"{_archiveApiUrl}?{query.ToString()}";

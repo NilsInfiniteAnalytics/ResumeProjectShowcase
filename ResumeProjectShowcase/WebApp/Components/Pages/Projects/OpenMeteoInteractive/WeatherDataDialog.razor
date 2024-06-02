@@ -113,7 +113,9 @@
         {
             _loading = true;
             _weatherData = null!;
-            var data = await OpenMeteoService.GetWeatherDataAsync(LatLng.Latitude, LatLng.Longitude, _startDate.Value.ToString("yyyy-MM-dd"), _endDate.Value.ToString("yyyy-MM-dd"));
+            var startDate = DateOnly.FromDateTime(_startDate.Value);
+            var endDate = DateOnly.FromDateTime(_endDate.Value);
+            var data = await OpenMeteoService.GetWeatherDataAsync(LatLng, startDate,  endDate);
             _weatherData = data ?? null!;
             _loading = false;
             StateHasChanged();
