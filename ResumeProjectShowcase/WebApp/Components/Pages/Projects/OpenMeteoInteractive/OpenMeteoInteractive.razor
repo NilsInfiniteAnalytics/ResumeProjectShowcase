@@ -1,5 +1,6 @@
 ﻿@page "/OpenMeteoInteractive"
 @inject DialogService DialogService
+@inject NotificationService NotificationService
 
 <PageTitle>Open Meteo Interactive Page - Under Construction</PageTitle>
 
@@ -16,7 +17,7 @@
     </Markers>
 </RadzenGoogleMap>
 
-<RadzenDialog></RadzenDialog>
+<RadzenDialog />
 
 @code {
     private readonly LatLng _markerPosition = new() { Latitude = 43.258509, Longitude = -77.606445 };
@@ -34,17 +35,33 @@
         try
         {
             await DialogService.OpenAsync<WeatherDataDialog>(
-            "Request Weather Data",
+            "Request OpenMeteo Weather Data",
             new Dictionary<string, object>
-                    {
+                        {
                         { "LatLng", _markerPosition },
-                    },
-            new DialogOptions { Width = "60vw", Height = "70vh" });
+                        },
+            new DialogOptions
+                {
+                    Width = "60vw",
+                    Height = "70vh",
+                    Resizable = true,
+                    CloseDialogOnEsc = true
+                });
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Duration = 4000,
+                    SummaryContent = ns =>@<RadzenText TextStyle="TextStyle.H6">Opened dialog!</RadzenText>,
+            });
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Duration = 4000,
+                    SummaryContent = ns =>@<RadzenText TextStyle="TextStyle.H6">Failed to open dialog!</RadzenText>,
+            });
         }
     }
 }

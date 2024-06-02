@@ -14,37 +14,43 @@
     </ChildContent>
 </RadzenFieldset>
 
-<RadzenCard Variant="Variant.Text">
-    @if (_weatherData == null)
-    {
-
-        @if (_loading)
+<RadzenFieldset>
+    <HeaderTemplate>
+        <span>
+            <RadzenIcon Icon="assessment" /><b>Weather Data Plots</b>
+        </span>
+    </HeaderTemplate>
+    <ChildContent>
+        @if (_weatherData == null)
         {
-            <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
-                                       Value="100"
-                                       ShowValue="false"
-                                       Mode="ProgressBarMode.Indeterminate" />
+
+            @if (_loading)
+            {
+                <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                           Value="100"
+                                           ShowValue="false"
+                                           Mode="ProgressBarMode.Indeterminate" />
+            }
+            else if (!_loading && _weatherData == null)
+            {
+                <p>Select date range and submit to view OpenMeteo data</p>
+            }
         }
-        else if (!_loading && _weatherData == null)
+        else
         {
-            <p>Select date range and submit to view OpenMeteo data</p>
+            <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.Temperature2m)"
+                                   YAxisUnits="@_weatherData.HourlyWeatherDataUnits.Temperature2m"
+                                   PlotName="Temperature" />
+            <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.RelativeHumidity2m)"
+                                   YAxisUnits="@_weatherData.HourlyWeatherDataUnits.RelativeHumidity2m"
+                                   PlotName="Relative Humidity" />
+            <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.SurfacePressure)"
+                                   YAxisUnits="@_weatherData.HourlyWeatherDataUnits.SurfacePressure"
+                                   PlotName="Surface Pressure" />
+
         }
-    }
-    else
-    {
-        <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.Temperature2m)"
-                               YAxisUnits="@_weatherData.HourlyWeatherDataUnits.Temperature2m"
-                               PlotName="Temperature" />
-        <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.RelativeHumidity2m)"
-                               YAxisUnits="@_weatherData.HourlyWeatherDataUnits.RelativeHumidity2m"
-                               PlotName="Relative Humidity" />
-        <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.SurfacePressure)"
-                               YAxisUnits="@_weatherData.HourlyWeatherDataUnits.SurfacePressure"
-                               PlotName="Surface Pressure" />
-
-    }
-</RadzenCard>
-
+    </ChildContent>
+</RadzenFieldset>
 
 <RadzenFieldset>
     <ChildContent>
@@ -61,7 +67,7 @@
     private DateTime? _startDate;
     private DateTime? _endDate;
     private WeatherData? _weatherData;
-    private bool _loading = false;
+    private bool _loading;
 
     protected override void OnInitialized()
     {
@@ -86,8 +92,10 @@
     {
         if (_startDate.HasValue && _endDate.HasValue)
         {
+            _loading = true;
             var data = await OpenMeteoService.GetWeatherDataAsync(LatLng.Latitude, LatLng.Longitude, _startDate.Value.ToString("yyyy-MM-dd"), _endDate.Value.ToString("yyyy-MM-dd"));
             _weatherData = data ?? null!;
+            _loading = false;
             StateHasChanged();
         }
     }
