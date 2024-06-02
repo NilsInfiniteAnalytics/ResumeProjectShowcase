@@ -29,7 +29,7 @@ namespace ClassLibrary.Tests.Modules
                 Latitude = latitude,
                 Longitude = longitude
             };
-            var startDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
+            var startDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7));
             var endDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-5));
 
             // Act

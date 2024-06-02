@@ -23,8 +23,10 @@ namespace ClassLibrary.Modules.OpenMeteoService
             var query = HttpUtility.ParseQueryString(string.Empty);
             query["latitude"] = latLng.Latitude.ToString(CultureInfo.InvariantCulture);
             query["longitude"] = latLng.Longitude.ToString(CultureInfo.InvariantCulture);
-            query["start_date"] = startDate.ToString();
-            query["end_date"] = endDate.ToString();
+            var startDateString = startDate.ToString("yyyy-MM-dd");
+            var endDateString = endDate.ToString("yyyy-MM-dd");
+            query["start_date"] = startDateString;
+            query["end_date"] = endDateString;
             query["hourly"] = "temperature_2m,relative_humidity_2m,surface_pressure";
 
             var requestUri = $"{_archiveApiUrl}?{query.ToString()}";
