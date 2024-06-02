@@ -2,24 +2,57 @@
 @inject DialogService DialogService
 @inject IOpenMeteoService OpenMeteoService
 
-<RadzenFieldset Legend="Select Date Range">
-    <RadzenDatePicker TValue="DateTime?" @bind-Value="_startDate" Placeholder="Start Date" />
-    <RadzenDatePicker TValue="DateTime?" @bind-Value="_endDate" Placeholder="End Date" />
+<RadzenFieldset AllowCollapse="true">
+    <HeaderTemplate>
+        <span>
+            <RadzenIcon Icon="date_range" /><b>Date selection</b>
+        </span>
+    </HeaderTemplate>
+    <ChildContent>
+        <RadzenDatePicker TValue="DateTime?" @bind-Value="_startDate" Placeholder="Start Date" />
+        <RadzenDatePicker TValue="DateTime?" @bind-Value="_endDate" Placeholder="End Date" />
+    </ChildContent>
 </RadzenFieldset>
 
-@if (_weatherData == null)
-{
-    <p>Select date range to view data</p>
-}
-else
-{
-    <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.Temperature2m)"
-                           YAxisUnits=_weatherData.HourlyWeatherDataUnits.Temperature2m 
-                           PlotName="Temperature"/>
-}
+<RadzenCard Variant="Variant.Text">
+    @if (_weatherData == null)
+    {
 
-<RadzenButton Text="Submit" Click="Submit" />
-<RadzenButton Text="Cancel" Click="Cancel" />
+        @if (_loading)
+        {
+            <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                       Value="100"
+                                       ShowValue="false"
+                                       Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (!_loading && _weatherData == null)
+        {
+            <p>Select date range and submit to view OpenMeteo data</p>
+        }
+    }
+    else
+    {
+        <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.Temperature2m)"
+                               YAxisUnits="@_weatherData.HourlyWeatherDataUnits.Temperature2m"
+                               PlotName="Temperature" />
+        <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.RelativeHumidity2m)"
+                               YAxisUnits="@_weatherData.HourlyWeatherDataUnits.RelativeHumidity2m"
+                               PlotName="Relative Humidity" />
+        <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.SurfacePressure)"
+                               YAxisUnits="@_weatherData.HourlyWeatherDataUnits.SurfacePressure"
+                               PlotName="Surface Pressure" />
+
+    }
+</RadzenCard>
+
+
+<RadzenFieldset>
+    <ChildContent>
+        <RadzenButton Text="Submit" Click="Submit" />
+        <RadzenButton Text="Cancel" Click="Cancel" />
+    </ChildContent>
+</RadzenFieldset>
+
 
 @code {
     [Parameter]
@@ -28,6 +61,7 @@ else
     private DateTime? _startDate;
     private DateTime? _endDate;
     private WeatherData? _weatherData;
+    private bool _loading = false;
 
     protected override void OnInitialized()
     {
