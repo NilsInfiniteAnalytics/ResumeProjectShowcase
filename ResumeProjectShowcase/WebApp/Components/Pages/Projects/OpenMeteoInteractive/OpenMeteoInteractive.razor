@@ -4,6 +4,25 @@
 
 <PageTitle>Open Meteo Interactive Page - Under Construction</PageTitle>
 
+<RadzenPanel AllowCollapse="true">
+    <HeaderTemplate>
+        <span>
+            <RadzenIcon Icon="change_history" /><b>How to use this page</b>
+        </span>
+    </HeaderTemplate>
+    <ChildContent>
+        <div class="instruction-panel">
+            <ol>
+                <li>Navigate using the map to find your desired location.</li>
+                <li>Click on a location to move the marker to where you clicked.</li>
+                <li>Click the marker to open a dialog for retrieval of weather data.</li>
+                <li>Select the start and end dates for the weather data and click Submit.</li>
+            </ol>
+            This is a work in progress and will be updated with more features in the future!
+        </div>
+    </ChildContent>
+</RadzenPanel>
+
 <RadzenGoogleMap style="height: 100%"
                  Zoom="@_zoom"
                  ApiKey="AIzaSyAaAyWRr-uflaYNL6jytN_K1ubG-oeLdgk"
@@ -11,8 +30,7 @@
                  MapClick="OnMapClick"
                  MarkerClick="OnMarkerClick">
     <Markers>
-        <RadzenGoogleMapMarker Title="Selection"
-                               Label="Selected Location"
+        <RadzenGoogleMapMarker Title="Selected Location"
                                Position="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })" />
     </Markers>
 </RadzenGoogleMap>

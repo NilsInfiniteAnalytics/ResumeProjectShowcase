@@ -1,0 +1,17 @@
+﻿.instruction-panel {
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+    padding: 15px;
+    top: 0;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.instruction-panel h3 {
+    margin-top: 0;
+}
+
+.instruction-panel ol {
+    margin: 0;
+    padding-left: 20px;
+}
