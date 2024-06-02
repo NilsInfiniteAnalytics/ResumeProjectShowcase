@@ -1,0 +1,19 @@
+﻿.date-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.loading-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+}
+
+.loading-indicator p {
+    margin-top: 10px;
+    font-size: 16px;
+    color: #007bff;
+}

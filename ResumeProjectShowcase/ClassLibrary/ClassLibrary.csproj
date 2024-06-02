@@ -10,8 +10,4 @@
     <InternalsVisibleTo Include="ResumeProjectShowcase.WebApp" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Modules\GoogleMapsService\" />
-  </ItemGroup>
-
 </Project>

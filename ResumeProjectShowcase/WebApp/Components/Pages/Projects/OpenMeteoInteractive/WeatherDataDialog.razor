@@ -9,8 +9,24 @@
         </span>
     </HeaderTemplate>
     <ChildContent>
-        <RadzenDatePicker TValue="DateTime?" @bind-Value="_startDate" Placeholder="Start Date" />
-        <RadzenDatePicker TValue="DateTime?" @bind-Value="_endDate" Placeholder="End Date" />
+        <div class="date-selection">
+            <RadzenLabel Text="Start Date" Component="startDatePicker" />
+            <RadzenDatePicker TValue="DateTime?"
+                              @bind-Value="_startDate" 
+                              Placeholder="Select Start Date" 
+                              DateFormat="MM/dd/yyyy"
+                              Min="DateTime.Today.AddDays(-500)"
+                              Max="DateTime.Today.AddDays(-1)"
+                              ShowTime="false"/>
+            <RadzenLabel Text="End Date" Component="endDatePicker" />
+            <RadzenDatePicker TValue="DateTime?" 
+                              @bind-Value="_endDate" 
+                              Placeholder="Select End Date"
+                              DateFormat="MM/dd/yyyy"
+                              Min="DateTime.Today.AddDays(-500)"
+                              Max="DateTime.Today.AddDays(-1)"
+                              ShowTime="false"/>
+        </div>
     </ChildContent>
 </RadzenFieldset>
 
@@ -26,10 +42,13 @@
 
             @if (_loading)
             {
-                <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
-                                           Value="100"
-                                           ShowValue="false"
-                                           Mode="ProgressBarMode.Indeterminate" />
+                <div class="loading-indicator">
+                    <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                               Value="100"
+                                               ShowValue="false"
+                                               Mode="ProgressBarMode.Indeterminate" />
+                    <p>Loading weather data...</p>
+                </div>
             }
             else if (!_loading && _weatherData == null)
             {
@@ -93,6 +112,7 @@
         if (_startDate.HasValue && _endDate.HasValue)
         {
             _loading = true;
+            _weatherData = null!;
             var data = await OpenMeteoService.GetWeatherDataAsync(LatLng.Latitude, LatLng.Longitude, _startDate.Value.ToString("yyyy-MM-dd"), _endDate.Value.ToString("yyyy-MM-dd"));
             _weatherData = data ?? null!;
             _loading = false;

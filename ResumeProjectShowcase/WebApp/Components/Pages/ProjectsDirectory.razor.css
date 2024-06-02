@@ -1,0 +1,10 @@
+﻿.projects-table {
+    margin-top: 40px;
+    max-width: 90vw;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.projects-table .rz-button {
+    margin: 5px;
+}
