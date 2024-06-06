@@ -17,9 +17,9 @@
 <canvas id="gameCanvas"></canvas>
 <div class="panel home" style="left: 9%; top: 9%;"></div>
 <div class="panel github" style="left: 37%; top: 5%;" @onclick="@NavigateToGitHub"></div>
-<div class="panel about" style="left: 76%; top: 12%;"></div>
-<div class="panel contact" style="left: 9%; top: 70%;"></div>
-<div class="panel projects" style="left: 75%; top: 69%;" @onclick="NavigateToProjectsDirectory"></div>
+<div class="panel gallery" style="left: 76%; top: 12%;" @onclick="() => NavigateToPanel(PanelType.Gallery)"></div>
+<div class="panel contact" style="left: 9%; top: 70%;" @onclick="() => NavigateToPanel(PanelType.Contact)"></div>
+<div class="panel projects" style="left: 75%; top: 69%;" @onclick="() => NavigateToPanel(PanelType.Projects)"></div>
 
 @code {
     int _selectedGridDrawMethod = (int)GridDrawMethods.GameOfLife;
@@ -27,7 +27,7 @@
     enum PanelType
     {
         Home,
-        About,
+        Gallery,
         Contact,
         Projects
     }
@@ -38,12 +38,12 @@
         HeatEquation
     }
 
-    Dictionary<int, string> _panelTypeToPath = new()
+    readonly Dictionary<PanelType, string> _panelTypeToPath = new()
     {
-        { (int)PanelType.Home, "/" },
-        { (int)PanelType.About, "/About" },
-        { (int)PanelType.Contact, "/Contact" },
-        { (int)PanelType.Projects, "/Projects" }
+        { PanelType.Home, "/" },
+        { PanelType.Gallery, "/Gallery" },
+        { PanelType.Contact, "/Resume" },
+        { PanelType.Projects, "/ProjectsDirectory" }
     };
 
     readonly Dictionary<int, string> _gridDrawMethodToJavascriptMethod = new()
@@ -68,7 +68,7 @@
 
     private void NavigateToGitHub() => NavigationManager.NavigateTo("https://github.com/NilsInfiniteAnalytics");
 
-    private void NavigateToProjectsDirectory() => NavigationManager.NavigateTo("/ProjectsDirectory");
+    private void NavigateToPanel(PanelType panelType) => NavigationManager.NavigateTo(_panelTypeToPath[panelType]);
 
     private async Task UpdateGridMethod()
     {

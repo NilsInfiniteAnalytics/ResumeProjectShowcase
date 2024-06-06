@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Components\Pages\Gallery.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.11.3" />
     <PackageReference Include="Microsoft.ApplicationInsights.SnapshotCollector" Version="1.4.6" />
     <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="7.2.0" />
@@ -17,6 +21,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ClassLibrary\ClassLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Components\Pages\Gallery.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Components\Pages\Gallery.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Components\Pages\Gallery.razor" />
   </ItemGroup>
 
 </Project>
