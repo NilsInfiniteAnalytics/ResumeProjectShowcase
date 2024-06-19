@@ -10,4 +10,8 @@
     <InternalsVisibleTo Include="ResumeProjectShowcase.WebApp" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="HumidAirPropertiesLib" Version="1.0.0" />
+  </ItemGroup>
+
 </Project>
