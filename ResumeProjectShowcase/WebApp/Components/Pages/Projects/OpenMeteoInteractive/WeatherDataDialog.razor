@@ -12,20 +12,20 @@
         <div class="date-selection">
             <RadzenLabel Text="Start Date" Component="startDatePicker" />
             <RadzenDatePicker TValue="DateTime?"
-                              @bind-Value="_startDate" 
-                              Placeholder="Select Start Date" 
+                              @bind-Value="_startDate"
+                              Placeholder="Select Start Date"
                               DateFormat="MM/dd/yyyy"
                               Min="DateTime.Today.AddDays(-500)"
                               Max="DateTime.Today.AddDays(-1)"
-                              ShowTime="false"/>
+                              ShowTime="false" />
             <RadzenLabel Text="End Date" Component="endDatePicker" />
-            <RadzenDatePicker TValue="DateTime?" 
-                              @bind-Value="_endDate" 
+            <RadzenDatePicker TValue="DateTime?"
+                              @bind-Value="_endDate"
                               Placeholder="Select End Date"
                               DateFormat="MM/dd/yyyy"
                               Min="DateTime.Today.AddDays(-500)"
                               Max="DateTime.Today.AddDays(-1)"
-                              ShowTime="false"/>
+                              ShowTime="false" />
         </div>
     </ChildContent>
 </RadzenFieldset>
@@ -57,16 +57,7 @@
         }
         else
         {
-            <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.Temperature2m)"
-                                   YAxisUnits="@_weatherData.HourlyWeatherDataUnits.Temperature2m"
-                                   PlotName="Temperature" />
-            <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.RelativeHumidity2m)"
-                                   YAxisUnits="@_weatherData.HourlyWeatherDataUnits.RelativeHumidity2m"
-                                   PlotName="Relative Humidity" />
-            <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData.HourlyWeatherDataLists.SurfacePressure)"
-                                   YAxisUnits="@_weatherData.HourlyWeatherDataUnits.SurfacePressure"
-                                   PlotName="Surface Pressure" />
-
+            <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData)" />
         }
     </ChildContent>
 </RadzenFieldset>
@@ -95,11 +86,14 @@
         StateHasChanged();
     }
 
-    private IEnumerable<WeatherChartData> GetWeatherChartData(List<double> values)
+    private IEnumerable<WeatherChartData> GetWeatherChartData(WeatherData data)
     {
-        if (_weatherData == null) return new List<WeatherChartData>();
-        var times = _weatherData.HourlyWeatherDataLists.Time;
-        return times.Select((t, i) => new WeatherChartData { Time = t, Value = values[i] }).ToList();
+        var times = data.HourlyWeatherDataLists.Time;
+        var temperatureData = data.HourlyWeatherDataLists.Temperature2m.Select((v, i) => new WeatherChartData { Time = times[i], Value = v, Type = "Temperature", Unit = data.HourlyWeatherDataUnits.Temperature2m }).ToList();
+        var humidityData = data.HourlyWeatherDataLists.RelativeHumidity2m.Select((v, i) => new WeatherChartData { Time = times[i], Value = v, Type = "Relative Humidity", Unit = data.HourlyWeatherDataUnits.RelativeHumidity2m }).ToList();
+        var pressureData = data.HourlyWeatherDataLists.SurfacePressure.Select((v, i) => new WeatherChartData { Time = times[i], Value = v, Type = "Surface Pressure", Unit = data.HourlyWeatherDataUnits.SurfacePressure }).ToList();
+
+        return temperatureData.Concat(humidityData).Concat(pressureData);
     }
 
     private async Task Submit()
@@ -115,7 +109,7 @@
             _weatherData = null!;
             var startDate = DateOnly.FromDateTime(_startDate.Value);
             var endDate = DateOnly.FromDateTime(_endDate.Value);
-            var data = await OpenMeteoService.GetWeatherDataAsync(LatLng, startDate,  endDate);
+            var data = await OpenMeteoService.GetWeatherDataAsync(LatLng, startDate, endDate);
             _weatherData = data ?? null!;
             _loading = false;
             StateHasChanged();

@@ -1,18 +1,16 @@
 ﻿@using Plotly.Blazor.LayoutLib
 @using Plotly.Blazor.Traces.ScatterLib
 
-<PlotlyChart @bind-Config="_config"
-             @bind-Layout="_layout"
-             @bind-Data="_data"
-             @ref="_chart" />
+<div style="height: 100%; width: 100%">
+    <PlotlyChart @bind-Config="_config"
+                 @bind-Layout="_layout"
+                 @bind-Data="_data"
+                 @ref="_chart" />
+</div>
 
 @code {
     [Parameter]
     public IEnumerable<WeatherChartData>? WeatherChartData { get; set; }
-    [Parameter]
-    public required string YAxisUnits { get; set; }
-    [Parameter]
-    public required string PlotName { get; set; }
 
     PlotlyChart _chart = new();
     Config _config = new();
@@ -22,39 +20,48 @@
     protected override void OnInitialized()
     {
         if (WeatherChartData is null) return;
-        var timeLabels = WeatherChartData.Select(w => (object)w.Time!).ToList();
-        var values = WeatherChartData.Select(w => (object)w.Value).ToList();
-        if (values.Count == 0) return;
-        _config = new()
-            {
-                Responsive = true
-            };
-        _layout = new()
-            {
-                Title = new Title
-                {
-                    Text = PlotName
-                },
-                YAxis = [
-                    new YAxis()
-                    {
-                        Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title
-                        {
-                            Text = YAxisUnits
-                        }
-                    }
-                ]
-            };
-        _data = new List<ITrace>
+
+        _config = new Config { Responsive = true };
+        _layout = new Layout
         {
-            new Scatter
+                Title = new Title { Text = "Weather Data" },
+                YAxis = new[]
             {
-                Name = PlotName,
-                Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = timeLabels,
-                Y = values,
+                new YAxis()
+                {
+                    Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Values" }
+                }
             }
-        };
+            };
+
+        var temperatureTrace = new Scatter
+            {
+                Name = $"Temperature ({WeatherChartData.FirstOrDefault(w => w.Type == "Temperature")?.Unit})",
+                Mode = ModeFlag.Lines | ModeFlag.Markers,
+                X = WeatherChartData.Where(w => w.Type == "Temperature").Select(w => (object)w.Time!).ToList(),
+                Y = WeatherChartData.Where(w => w.Type == "Temperature").Select(w => (object)w.Value).ToList(),
+                YAxis = "y"
+            };
+
+        var humidityTrace = new Scatter
+            {
+                Name = $"Relative Humidity ({WeatherChartData.FirstOrDefault(w => w.Type == "Relative Humidity")?.Unit})",
+                Mode = ModeFlag.Lines | ModeFlag.Markers,
+                X = WeatherChartData.Where(w => w.Type == "Relative Humidity").Select(w => (object)w.Time!).ToList(),
+                Y = WeatherChartData.Where(w => w.Type == "Relative Humidity").Select(w => (object)w.Value).ToList(),
+                YAxis = "y"
+            };
+
+        var pressureTrace = new Scatter
+            {
+                Name = $"Surface Pressure ({WeatherChartData.FirstOrDefault(w => w.Type == "Surface Pressure")?.Unit})",
+                Mode = ModeFlag.Lines | ModeFlag.Markers,
+                X = WeatherChartData.Where(w => w.Type == "Surface Pressure").Select(w => (object)w.Time!).ToList(),
+                Y = WeatherChartData.Where(w => w.Type == "Surface Pressure").Select(w => (object)w.Value).ToList(),
+                YAxis = "y"
+            };
+
+        _data = new List<ITrace> { temperatureTrace, humidityTrace, pressureTrace };
         StateHasChanged();
     }
 }
