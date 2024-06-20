@@ -23,11 +23,9 @@ public class GeocodingService(HttpClient httpClient, ILogger logger) : IGeocodin
         INVALID_REQUEST,
         UNKNOWN_ERROR
     }
-
     public async Task<string> GetCityNameAsync(LatLng latLng)
     {
-        var url =
-            $"https://maps.googleapis.com/maps/api/geocode/json?latlng={latLng.Latitude},{latLng.Longitude}&key={ApiKey}";
+        var url = $"https://maps.googleapis.com/maps/api/geocode/json?latlng={latLng.Latitude},{latLng.Longitude}&key={ApiKey}";
         logger.Information($"Requesting city name from Geocoding API: {url}");
         var stopwatch = new Stopwatch();
         stopwatch.Start();
