@@ -36,22 +36,23 @@
              @ref="_weatherDataChart"
              @key="_weatherDataChartKey"
              style="height: 30vh;" />
-
-<PlotlyChart @bind-Config="_eosChartConfig"
-             @bind-Layout="_eosChartLayout"
-             @bind-Data="_eosTraces"
-             @ref="_eosChart"
-             @key="_eosChartKey"
-             style="height: 30vh;" />
-
+@if (_eosTraces.Count > 0)
+{
+    <PlotlyChart @bind-Config="_eosChartConfig"
+                 @bind-Layout="_eosChartLayout"
+                 @bind-Data="_eosTraces"
+                 @ref="_eosChart"
+                 @key="_eosChartKey"
+                 style="height: 30vh;" />
+}
 
 @code {
     [Parameter]
     public IEnumerable<WeatherChartData>? WeatherChartData { get; set; }
     [Parameter]
-    public LatLng LatLng { get; set; }
+    public required LatLng LatLng { get; set; }
     [Parameter]
-    public string CityName { get; set; }
+    public required string CityName { get; set; }
 
     PlotlyChart _weatherDataChart = new();
     PlotlyChart _eosChart = new();
@@ -114,24 +115,28 @@
     string _molarIsochoricSpecificHeatUnit = "J mol-1 K-1";
     string _molarIsobaricSpecificHeatUnit = "J mol-1 K-1";
 
-    protected override void OnInitialized()
+    protected override void OnAfterRender(bool firstRender)
     {
-        if (WeatherChartData is null) return;
+        if (firstRender)
+        {
+            if (WeatherChartData is null) return;
 
-        _temperatures = processWeatherDataValueLists(WeatherChartData, "Temperature");
-        _relativeHumidities = processWeatherDataValueLists(WeatherChartData, "Relative Humidity");
-        _surfacePressures = processWeatherDataValueLists(WeatherChartData, "Surface Pressure");
+            _temperatures = processWeatherDataValueLists(WeatherChartData, "Temperature");
+            _relativeHumidities = processWeatherDataValueLists(WeatherChartData, "Relative Humidity");
+            _surfacePressures = processWeatherDataValueLists(WeatherChartData, "Surface Pressure");
 
-        _temperatureUnit = WeatherChartData.FirstOrDefault(w => w.Type == "Temperature")?.Unit ?? string.Empty;
-        _selectedTemperatureUnits = _temperatureUnitMap.FirstOrDefault(u => u.Value == _temperatureUnit).Key;
-        _oldSelectedUnits = _selectedTemperatureUnits;
-        _relativeHumidityUnit = WeatherChartData.FirstOrDefault(w => w.Type == "Relative Humidity")?.Unit ?? string.Empty;
-        _surfacePressureUnit = WeatherChartData.FirstOrDefault(w => w.Type == "Surface Pressure")?.Unit ?? string.Empty;
+            _temperatureUnit = WeatherChartData.FirstOrDefault(w => w.Type == "Temperature")?.Unit ?? string.Empty;
+            _selectedTemperatureUnits = _temperatureUnitMap.FirstOrDefault(u => u.Value == _temperatureUnit).Key;
+            _oldSelectedUnits = _selectedTemperatureUnits;
+            _relativeHumidityUnit = WeatherChartData.FirstOrDefault(w => w.Type == "Relative Humidity")?.Unit ?? string.Empty;
+            _surfacePressureUnit = WeatherChartData.FirstOrDefault(w => w.Type == "Surface Pressure")?.Unit ?? string.Empty;
 
-        _time = WeatherChartData.Where(w => w.Type == "Temperature").Select(w => (object)w.Time!).ToList();
+            _time = WeatherChartData.Where(w => w.Type == "Temperature").Select(w => (object)w.Time!).ToList();
 
-        DrawNewWeatherTraceData();
-        StateHasChanged();
+            DrawNewWeatherTraceData();
+            StateHasChanged();
+        }
+        base.OnAfterRender(firstRender);
     }
 
     void DrawNewWeatherTraceData()
@@ -142,21 +147,21 @@
             {
                 Title = new Title { Text = $"Weather Data for {CityName}, nearest to Lat={Math.Round(LatLng.Latitude, 2)},Long={Math.Round(LatLng.Longitude, 2)}" },
                 YAxis = new[]
-                                                {
+                                                        {
                     new YAxis
                     {
-                        Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Values" }
+                        Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Temperature, Relative Humidity" }
                     },
                     new YAxis
                     {
-                        Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Values" },
+                        Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Surface Pressure" },
                         Overlaying = "y",
                         Side = Plotly.Blazor.LayoutLib.YAxisLib.SideEnum.Right,
                     }
                 },
                 ShowLegend = true,
                 Legend = [
-                           new Legend {
+                                   new Legend {
                                 X = 0,
                                 Y = (decimal)-0.2,
                                 Orientation = Plotly.Blazor.LayoutLib.LegendLib.OrientationEnum.H,
@@ -258,7 +263,7 @@
             {
                 Title = new Title { Text = $"Dry Air Equation Of State [Lemmon, 2000]" },
                 YAxis = new[]
-                        {
+                                {
                         new YAxis
                         {
                             Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Density, Specific Heats" }
@@ -272,7 +277,7 @@
                     },
                 ShowLegend = true,
                 Legend = [
-                                   new Legend {
+                                           new Legend {
                                 X = 0,
                                 Y = (decimal)-0.2,
                                 Orientation = Plotly.Blazor.LayoutLib.LegendLib.OrientationEnum.H,

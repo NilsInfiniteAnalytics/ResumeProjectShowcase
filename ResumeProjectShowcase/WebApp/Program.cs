@@ -80,6 +80,11 @@ builder.Services.AddTransient<IGeocodingService>(sp =>
     return new GeocodingService(httpClient);
 });
 
+builder.Services.AddServerSideBlazor().AddCircuitOptions(o =>
+{
+    o.DetailedErrors = builder.Environment.IsDevelopment();
+});
+
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {

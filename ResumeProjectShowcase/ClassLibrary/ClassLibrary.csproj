@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="ResumeProjectShowcase.WebApp" />
-  </ItemGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="ResumeProjectShowcase.WebApp" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="HumidAirPropertiesLib" Version="1.0.1" />
-    <PackageReference Include="UnitsConverter" Version="1.1.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="HumidAirPropertiesLib" Version="2.0.0" />
+		<PackageReference Include="UnitsConverter" Version="1.1.2" />
+	</ItemGroup>
 
 </Project>

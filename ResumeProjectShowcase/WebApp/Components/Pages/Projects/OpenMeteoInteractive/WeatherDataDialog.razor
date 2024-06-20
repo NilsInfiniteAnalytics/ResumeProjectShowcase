@@ -65,8 +65,8 @@
 
 <RadzenFieldset>
     <ChildContent>
-        <RadzenButton Text="Submit" Click="Submit" />
-        <RadzenButton Text="Cancel" Click="Cancel" />
+        <RadzenButton Text="Submit" Click="Submit" Disabled="@_loading"/>
+        <RadzenButton Text="Cancel" Click="Cancel" Disabled="@_loading" />
     </ChildContent>
 </RadzenFieldset>
 
@@ -112,9 +112,18 @@
             _weatherData = null!;
             var startDate = DateOnly.FromDateTime(_startDate.Value);
             var endDate = DateOnly.FromDateTime(_endDate.Value);
-            var data = await OpenMeteoService.GetWeatherDataAsync(LatLng, startDate, endDate);
-            _weatherData = data ?? null!;
-            _loading = false;
+            try
+            {
+                var data = await OpenMeteoService.GetWeatherDataAsync(LatLng, startDate, endDate);
+                _weatherData = data ?? null!;
+                _loading = false;
+            }
+            catch (Exception ex)
+            {
+                _loading = false;
+                _weatherData = null!;
+                Console.WriteLine(ex.Message);
+            }
             StateHasChanged();
         }
     }
