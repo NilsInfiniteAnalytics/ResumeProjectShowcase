@@ -1,6 +1,7 @@
 ﻿@page "/OpenMeteoInteractive"
 @inject DialogService DialogService
 @inject NotificationService NotificationService
+@inject IGeocodingService GeocodingService
 
 <PageTitle>Open Meteo Interactive Page - Under Construction</PageTitle>
 
@@ -40,6 +41,7 @@
 @code {
     private readonly LatLng _markerPosition = new() { Latitude = 43.258509, Longitude = -77.606445 };
     private readonly int _zoom = 10;
+    private string _nearestCity = "Unknown";
 
     private void OnMapClick(GoogleMapClickEventArgs args)
     {
@@ -52,12 +54,14 @@
     {
         try
         {
+            _nearestCity = await GeocodingService.GetCityNameAsync(_markerPosition);
             await DialogService.OpenAsync<WeatherDataDialog>(
             "Request OpenMeteo Weather Data",
             new Dictionary<string, object>
-                        {
-                        { "LatLng", _markerPosition },
-                        },
+                            {
+                                { "LatLng", _markerPosition },
+                                { "CityName", _nearestCity},
+                            },
             new DialogOptions
                 {
                     Width = "60vw",
@@ -79,7 +83,7 @@
                     Severity = NotificationSeverity.Error,
                     Duration = 4000,
                     SummaryContent = ns =>@<RadzenText TextStyle="TextStyle.H6">Failed to open dialog!</RadzenText>,
-                    DetailContent = ns =>@<RadzenText>@e.Message</RadzenText>,
+                DetailContent = ns =>@<RadzenText>@e.Message</RadzenText>,
             });
         }
     }

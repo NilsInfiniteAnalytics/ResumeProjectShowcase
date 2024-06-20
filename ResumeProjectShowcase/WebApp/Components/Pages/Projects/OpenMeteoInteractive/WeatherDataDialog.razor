@@ -39,7 +39,6 @@
     <ChildContent>
         @if (_weatherData == null)
         {
-
             @if (_loading)
             {
                 <div class="loading-indicator">
@@ -57,7 +56,9 @@
         }
         else
         {
-            <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData)" />
+            <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData)"
+                                   LatLng="@LatLng"
+                                   CityName="@CityName" />
         }
     </ChildContent>
 </RadzenFieldset>
@@ -73,6 +74,8 @@
 @code {
     [Parameter]
     public required LatLng LatLng { get; set; }
+    [Parameter]
+    public string CityName { get; set; }
 
     private DateTime? _startDate;
     private DateTime? _endDate;

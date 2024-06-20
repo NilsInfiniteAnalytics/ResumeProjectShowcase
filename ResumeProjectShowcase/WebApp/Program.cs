@@ -4,6 +4,7 @@ using Azure.Identity;
 using ClassLibrary.Interfaces;
 using ClassLibrary.Modules.OpenMeteoService;
 using ClassLibrary.Modules.UnitsConverterService;
+using ClassLibrary.Modules.GeocodingService;
 
 var builder = WebApplication.CreateBuilder(args);
 try
@@ -61,7 +62,7 @@ builder.Services
     .AddHttpClient();
 
 var openMeteoArchiveApiUrl = builder.Configuration["OpenMeteoArchiveApiUrl"];
-if(!string.IsNullOrEmpty(openMeteoArchiveApiUrl))
+if (!string.IsNullOrEmpty(openMeteoArchiveApiUrl))
 {
     builder.Services.AddSingleton<IOpenMeteoService>(sp =>
     {
@@ -71,6 +72,11 @@ if(!string.IsNullOrEmpty(openMeteoArchiveApiUrl))
 }
 
 builder.Services.AddTransient<IUnitsConverterService, UnitsConverterService>();
+builder.Services.AddTransient<IGeocodingService>(sp =>
+{
+    var httpClient = sp.GetRequiredService<HttpClient>();
+    return new GeocodingService(httpClient);
+});
 
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
@@ -89,6 +95,6 @@ app.UseStaticFiles(new StaticFileOptions
         ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Expires] = "0";
     }
 });
-app.UseAntiforgery(); 
+app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.Run();

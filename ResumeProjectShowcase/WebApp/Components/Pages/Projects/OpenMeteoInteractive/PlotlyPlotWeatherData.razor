@@ -31,6 +31,10 @@
 @code {
     [Parameter]
     public IEnumerable<WeatherChartData>? WeatherChartData { get; set; }
+    [Parameter]
+    public LatLng LatLng { get; set; }
+    [Parameter]
+    public string CityName { get; set; }
 
     PlotlyChart _chart = new();
     Config _config = new();
@@ -99,9 +103,9 @@
         _config = new Config { Responsive = true };
         _layout = new Layout
             {
-                Title = new Title { Text = "Weather Data" },
+                Title = new Title { Text = $"Weather Data for {CityName}, nearest to Lat={Math.Round(LatLng.Latitude, 2)},Long={Math.Round(LatLng.Longitude, 2)}" },
                 YAxis = new[]
-                                {
+                                    {
                     new YAxis
                     {
                         Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Values" }
@@ -115,7 +119,7 @@
                 },
                 ShowLegend = true,
                 Legend = [
-                                    new Legend {
+                                        new Legend {
                                 X = 0,
                                 Y = (decimal)-0.2, // Adjust the Y value as needed
                                 Orientation = Plotly.Blazor.LayoutLib.LegendLib.OrientationEnum.H,
