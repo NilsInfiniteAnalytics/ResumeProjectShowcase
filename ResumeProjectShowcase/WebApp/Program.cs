@@ -5,6 +5,7 @@ using ClassLibrary.Interfaces;
 using ClassLibrary.Modules.OpenMeteoService;
 using ClassLibrary.Modules.UnitsConverterService;
 using ClassLibrary.Modules.GeocodingService;
+using ClassLibrary.Modules.HumidAirPropertiesService;
 
 var builder = WebApplication.CreateBuilder(args);
 try
@@ -72,6 +73,7 @@ if (!string.IsNullOrEmpty(openMeteoArchiveApiUrl))
 }
 
 builder.Services.AddTransient<IUnitsConverterService, UnitsConverterService>();
+builder.Services.AddTransient<IHumidAirPropertiesService, HumidAirPropertiesService>();
 builder.Services.AddTransient<IGeocodingService>(sp =>
 {
     var httpClient = sp.GetRequiredService<HttpClient>();
