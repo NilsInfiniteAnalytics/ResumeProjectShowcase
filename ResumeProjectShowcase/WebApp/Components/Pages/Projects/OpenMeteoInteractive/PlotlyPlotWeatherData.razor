@@ -1,12 +1,32 @@
 ﻿@using Plotly.Blazor.LayoutLib
 @using Plotly.Blazor.Traces.ScatterLib
+@inject IUnitsConverterService UnitsConverterService
 
-<div style="height: 100%; width: 100%">
-    <PlotlyChart @bind-Config="_config"
-                 @bind-Layout="_layout"
-                 @bind-Data="_data"
-                 @ref="_chart" />
-</div>
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap">
+    <RadzenStack Orientation="Orientation.Vertical" Gap="4px">
+        Temperature Units
+        <RadzenDropDown @bind-Value="@_selectedTemperatureUnits"
+                        TextProperty="Text"
+                        ValueProperty="Value"
+                        Data="@(Enum.GetValues(typeof(TemperatureUnits)).Cast<TemperatureUnits>().Select(t => new { Text = $"{t}", Value = t }))"
+                        Change="OnTemperatureUnitDropDownChange" />
+    </RadzenStack>
+    <RadzenStack Orientation="Orientation.Vertical" Gap="4px">
+        Surface Pressure Units
+        <RadzenDropDown @bind-Value="@_selectedPressureUnits"
+                        TextProperty="Text"
+                        ValueProperty="Value"
+                        Data="@(Enum.GetValues(typeof(PressureUnits)).Cast<PressureUnits>().Select(t => new { Text = $"{t}", Value = t }))"
+                        Change="OnPressureUnitDropDownChange" />
+    </RadzenStack>
+</RadzenStack>
+
+<PlotlyChart @bind-Config="_config"
+             @bind-Layout="_layout"
+             @bind-Data="_data"
+             @ref="_chart"
+             @key="_chartKey"
+             style="height: 30vh;" />
 
 @code {
     [Parameter]
@@ -15,53 +35,160 @@
     PlotlyChart _chart = new();
     Config _config = new();
     Layout _layout = new();
-    IList<ITrace>? _data;
+    IList<ITrace> _data = [];
+    IList<object> _temperatures = [];
+    IList<object> _relativeHumidities = [];
+    IList<object> _surfacePressures = [];
+    IList<object> _time = [];
+    Dictionary<TemperatureUnits, string> _temperatureUnitMap = new()
+    {
+        { TemperatureUnits.Fahrenheit, "\u00b0F" },
+        { TemperatureUnits.Celsius, "\u00b0C" },
+        { TemperatureUnits.Kelvin, "K" }
+    };
+    TemperatureUnits _selectedTemperatureUnits;
+    TemperatureUnits _oldSelectedUnits;
+    enum TemperatureUnits
+    {
+        Fahrenheit,
+        Celsius,
+        Kelvin,
+    }
+    Dictionary<PressureUnits, string> _pressureUnitMap = new()
+    {
+        { PressureUnits.Pascal, "Pa" },
+        { PressureUnits.Hectopascal, "hPa" },
+        { PressureUnits.Megapascal, "MPa" }
+    };
+    PressureUnits _selectedPressureUnits;
+    PressureUnits _oldSelectedPressureUnits;
+    enum PressureUnits
+    {
+        Hectopascal,
+        Pascal,
+        Megapascal,
+    }
+    string _temperatureUnit = string.Empty;
+    string _relativeHumidityUnit = string.Empty;
+    string _surfacePressureUnit = string.Empty;
+    private Guid _chartKey = Guid.NewGuid();
 
     protected override void OnInitialized()
     {
         if (WeatherChartData is null) return;
 
+        _temperatures = processWeatherDataValueLists(WeatherChartData, "Temperature");
+        _relativeHumidities = processWeatherDataValueLists(WeatherChartData, "Relative Humidity");
+        _surfacePressures = processWeatherDataValueLists(WeatherChartData, "Surface Pressure");
+
+        _temperatureUnit = WeatherChartData.FirstOrDefault(w => w.Type == "Temperature")?.Unit ?? string.Empty;
+        _selectedTemperatureUnits = _temperatureUnitMap.FirstOrDefault(u => u.Value == _temperatureUnit).Key;
+        _oldSelectedUnits = _selectedTemperatureUnits;
+        _relativeHumidityUnit = WeatherChartData.FirstOrDefault(w => w.Type == "Relative Humidity")?.Unit ?? string.Empty;
+        _surfacePressureUnit = WeatherChartData.FirstOrDefault(w => w.Type == "Surface Pressure")?.Unit ?? string.Empty;
+
+        _time = WeatherChartData.Where(w => w.Type == "Temperature").Select(w => (object)w.Time!).ToList();
+
+        DrawNewTraceData();
+        StateHasChanged();
+    }
+
+    void DrawNewTraceData()
+    {
+        _data.Clear();
         _config = new Config { Responsive = true };
         _layout = new Layout
-        {
+            {
                 Title = new Title { Text = "Weather Data" },
                 YAxis = new[]
-            {
-                new YAxis()
-                {
-                    Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Values" }
-                }
-            }
+                                {
+                    new YAxis
+                    {
+                        Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Values" }
+                    },
+                    new YAxis
+                    {
+                        Title = new Plotly.Blazor.LayoutLib.YAxisLib.Title { Text = "Values" },
+                        Overlaying = "y",
+                        Side = Plotly.Blazor.LayoutLib.YAxisLib.SideEnum.Right,
+                    }
+                },
+                ShowLegend = true,
+                Legend = [
+                                    new Legend {
+                                X = 0,
+                                Y = (decimal)-0.2, // Adjust the Y value as needed
+                                Orientation = Plotly.Blazor.LayoutLib.LegendLib.OrientationEnum.H,
+                            }]
             };
 
         var temperatureTrace = new Scatter
             {
-                Name = $"Temperature ({WeatherChartData.FirstOrDefault(w => w.Type == "Temperature")?.Unit})",
+                Name = $"Temperature ({_temperatureUnit})",
                 Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = WeatherChartData.Where(w => w.Type == "Temperature").Select(w => (object)w.Time!).ToList(),
-                Y = WeatherChartData.Where(w => w.Type == "Temperature").Select(w => (object)w.Value).ToList(),
+                X = _time,
+                Y = _temperatures,
                 YAxis = "y"
             };
 
         var humidityTrace = new Scatter
             {
-                Name = $"Relative Humidity ({WeatherChartData.FirstOrDefault(w => w.Type == "Relative Humidity")?.Unit})",
+                Name = $"Relative Humidity ({_relativeHumidityUnit})",
                 Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = WeatherChartData.Where(w => w.Type == "Relative Humidity").Select(w => (object)w.Time!).ToList(),
-                Y = WeatherChartData.Where(w => w.Type == "Relative Humidity").Select(w => (object)w.Value).ToList(),
+                X = _time,
+                Y = _relativeHumidities,
                 YAxis = "y"
             };
 
         var pressureTrace = new Scatter
             {
-                Name = $"Surface Pressure ({WeatherChartData.FirstOrDefault(w => w.Type == "Surface Pressure")?.Unit})",
+                Name = $"Surface Pressure ({_surfacePressureUnit})",
                 Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = WeatherChartData.Where(w => w.Type == "Surface Pressure").Select(w => (object)w.Time!).ToList(),
-                Y = WeatherChartData.Where(w => w.Type == "Surface Pressure").Select(w => (object)w.Value).ToList(),
-                YAxis = "y"
+                X = _time,
+                Y = _surfacePressures,
+                YAxis = "y2"
             };
 
-        _data = new List<ITrace> { temperatureTrace, humidityTrace, pressureTrace };
+        _data.Add(temperatureTrace);
+        _data.Add(humidityTrace);
+        _data.Add(pressureTrace);
+
+        _chartKey = Guid.NewGuid();
         StateHasChanged();
+    }
+
+    IList<object> processWeatherDataValueLists(IEnumerable<WeatherChartData> weatherData, string type)
+    {
+        return weatherData.Where(w => w.Type == type).Select(w => (object)w.Value).ToList();
+    }
+
+    void OnTemperatureUnitDropDownChange(object value)
+    {
+        if (value is TemperatureUnits units)
+        {
+            _selectedTemperatureUnits = units;
+            _temperatureUnit = _temperatureUnitMap[_selectedTemperatureUnits];
+            var temperaturesArray = _temperatures.Cast<double>().ToArray();
+            var convertedTemperatures = UnitsConverterService.ConvertArray(temperaturesArray, _temperatureUnitMap[_oldSelectedUnits], _temperatureUnitMap[_selectedTemperatureUnits]);
+            _temperatures = convertedTemperatures.Cast<object>().ToList();
+            _oldSelectedUnits = _selectedTemperatureUnits;
+            DrawNewTraceData();
+            StateHasChanged();
+        }
+    }
+
+    void OnPressureUnitDropDownChange(object value)
+    {
+        if (value is PressureUnits units)
+        {
+            _selectedPressureUnits = units;
+            _surfacePressureUnit = _pressureUnitMap[_selectedPressureUnits];
+            var pressuresArray = _surfacePressures.Cast<double>().ToArray();
+            var convertedPressures = UnitsConverterService.ConvertArray(pressuresArray, _pressureUnitMap[_oldSelectedPressureUnits], _pressureUnitMap[_selectedPressureUnits]);
+            _surfacePressures = convertedPressures.Cast<object>().ToList();
+            _oldSelectedPressureUnits = _selectedPressureUnits;
+            DrawNewTraceData();
+            StateHasChanged();
+        }
     }
 }

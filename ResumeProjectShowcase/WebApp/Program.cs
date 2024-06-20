@@ -3,6 +3,7 @@ using WebApp.Components;
 using Azure.Identity;
 using ClassLibrary.Interfaces;
 using ClassLibrary.Modules.OpenMeteoService;
+using ClassLibrary.Modules.UnitsConverterService;
 
 var builder = WebApplication.CreateBuilder(args);
 try
@@ -68,6 +69,8 @@ if(!string.IsNullOrEmpty(openMeteoArchiveApiUrl))
         return new OpenMeteoService(httpClient, openMeteoArchiveApiUrl);
     });
 }
+
+builder.Services.AddTransient<IUnitsConverterService, UnitsConverterService>();
 
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
