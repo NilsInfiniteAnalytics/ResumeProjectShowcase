@@ -1,20 +1,23 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using System.Web;
 using ClassLibrary.Interfaces;
 using ClassLibrary.Models.OpenMeteoService;
-namespace ClassLibrary.Modules.OpenMeteoService;
+using Serilog;
 
+namespace ClassLibrary.Modules.OpenMeteoService;
 public sealed class OpenMeteoService : IOpenMeteoService
 {
     private readonly HttpClient _httpClient;
-
     private readonly string _archiveApiUrl;
+    private readonly ILogger _logger;
 
-    public OpenMeteoService(HttpClient httpClient, string archiveApiUrl)
+    public OpenMeteoService(HttpClient httpClient, string archiveApiUrl, ILogger logger)
     {
         _httpClient = httpClient;
         _archiveApiUrl = archiveApiUrl;
+        _logger = logger;
     }
 
     public async Task<WeatherData?> GetWeatherDataAsync(LatLng latLng, DateOnly startDate, DateOnly endDate)
@@ -29,7 +32,14 @@ public sealed class OpenMeteoService : IOpenMeteoService
         query["hourly"] = "temperature_2m,relative_humidity_2m,surface_pressure";
 
         var requestUri = $"{_archiveApiUrl}?{query.ToString()}";
+        _logger.Information($"Requesting weather data from OpenMeteo API: {requestUri}");
+        // Log how long it took to process the request
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
         var response = await _httpClient.GetAsync(requestUri);
+        stopwatch.Stop();
+        _logger.Information($"Request took {stopwatch.ElapsedMilliseconds} ms");
+        _logger.Information($"Response status code: {response.StatusCode}");
 
         if (!response.IsSuccessStatusCode)
         {

@@ -1,4 +1,5 @@
 using Radzen;
+using Serilog;
 using WebApp.Components;
 using Azure.Identity;
 using ClassLibrary.Interfaces;
@@ -8,6 +9,9 @@ using ClassLibrary.Modules.GeocodingService;
 using ClassLibrary.Modules.HumidAirPropertiesService;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration));
+var logger = builder.Services.BuildServiceProvider().GetRequiredService<Serilog.ILogger>();
 try
 {
     var azAppConfigConnection = builder.Configuration["AppConfig"];
@@ -49,10 +53,9 @@ try
 }
 catch (Exception e)
 {
-    System.Diagnostics.Trace.TraceError($"Error: {e.Message}");
+    logger.Error(e, "Error while configuring Azure App Configuration");
     throw;
 }
-
 
 builder.Services
     .AddRazorComponents()
@@ -62,13 +65,15 @@ builder.Services
 builder.Services
     .AddHttpClient();
 
+
+
 var openMeteoArchiveApiUrl = builder.Configuration["OpenMeteoArchiveApiUrl"];
 if (!string.IsNullOrEmpty(openMeteoArchiveApiUrl))
 {
     builder.Services.AddSingleton<IOpenMeteoService>(sp =>
     {
         var httpClient = sp.GetRequiredService<HttpClient>();
-        return new OpenMeteoService(httpClient, openMeteoArchiveApiUrl);
+        return new OpenMeteoService(httpClient, openMeteoArchiveApiUrl, logger);
     });
 }
 
@@ -102,6 +107,7 @@ app.UseStaticFiles(new StaticFileOptions
         ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Expires] = "0";
     }
 });
+app.UseSerilogRequestLogging();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.Run();
