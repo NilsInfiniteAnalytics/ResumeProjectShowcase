@@ -82,7 +82,7 @@ builder.Services.AddTransient<IHumidAirPropertiesService, HumidAirPropertiesServ
 builder.Services.AddTransient<IGeocodingService>(sp =>
 {
     var httpClient = sp.GetRequiredService<HttpClient>();
-    return new GeocodingService(httpClient);
+    return new GeocodingService(httpClient, logger);
 });
 
 builder.Services.AddServerSideBlazor().AddCircuitOptions(o =>

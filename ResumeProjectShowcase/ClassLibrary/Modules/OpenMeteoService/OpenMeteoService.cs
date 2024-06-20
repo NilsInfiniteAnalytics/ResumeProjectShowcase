@@ -33,7 +33,6 @@ public sealed class OpenMeteoService : IOpenMeteoService
 
         var requestUri = $"{_archiveApiUrl}?{query.ToString()}";
         _logger.Information($"Requesting weather data from OpenMeteo API: {requestUri}");
-        // Log how long it took to process the request
         var stopwatch = new Stopwatch();
         stopwatch.Start();
         var response = await _httpClient.GetAsync(requestUri);
