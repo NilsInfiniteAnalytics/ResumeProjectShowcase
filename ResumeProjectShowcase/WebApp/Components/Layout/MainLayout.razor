@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Reflection
+@inherits LayoutComponentBase
 @inject IJSRuntime JsRuntime
 
 <RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
@@ -8,6 +9,7 @@
             <RadzenLabel Text="@_windowSize" Style="margin-right: 20px;" />
             <RadzenLabel Text="@_currentTime.ToString("HH:mm:ss")" Style="margin-right: 20px;" />
             <RadzenLabel Text="@WelcomeText" Style="margin-right: 20px;" />
+            <RadzenLabel Text="@_version" Style="margin-left: auto; margin-right: 20px;" />
         </RadzenStack>
     </RadzenHeader>
     <RadzenSidebar @bind-Expanded="@_sidebarExpanded" style="position: absolute; z-index: 3">
@@ -28,16 +30,12 @@
 
 @code {
     bool _sidebarExpanded;
-
     static string? _windowSize;
-
     Timer? _timer;
-
     static DateTime _currentTime = DateTime.Now;
-
     static string WelcomeText => $"{Greeting}, user!";
-
     static string Greeting => GetGreetingByTime();
+    static string? _version;
 
     private static string GetGreetingByTime()
     {
@@ -67,6 +65,7 @@
     {
         _timer = new Timer(TimerCallback, null, 0, 1000);
         _sidebarExpanded = false;
+        _version = GetVersion();
         StateHasChanged();
         return base.OnInitializedAsync();
     }
@@ -91,4 +90,9 @@
         InvokeAsync(StateHasChanged);
     }
 
+    private static string GetVersion()
+    {
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        return version != null ? $"Build Version {version}" : "Version not found";
+    }
 }
