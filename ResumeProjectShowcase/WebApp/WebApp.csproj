@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
-		<AssemblyVersion>1.2.1.73</AssemblyVersion>
+		<AssemblyVersion>1.2.1.74</AssemblyVersion>
 		<Authors>Christopher Alan Popovich</Authors>
 		<UserSecretsId>3be43ebf-e7f8-446a-adb4-b40115a71ef1</UserSecretsId>
 	</PropertyGroup>

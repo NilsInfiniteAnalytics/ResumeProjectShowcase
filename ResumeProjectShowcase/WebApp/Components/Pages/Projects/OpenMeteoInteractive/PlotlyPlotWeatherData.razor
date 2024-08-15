@@ -121,9 +121,9 @@
         {
             if (WeatherChartData is null) return;
 
-            _temperatures = processWeatherDataValueLists(WeatherChartData, "Temperature");
-            _relativeHumidities = processWeatherDataValueLists(WeatherChartData, "Relative Humidity");
-            _surfacePressures = processWeatherDataValueLists(WeatherChartData, "Surface Pressure");
+            _temperatures = ProcessWeatherDataValueLists(WeatherChartData, "Temperature");
+            _relativeHumidities = ProcessWeatherDataValueLists(WeatherChartData, "Relative Humidity");
+            _surfacePressures = ProcessWeatherDataValueLists(WeatherChartData, "Surface Pressure");
 
             _temperatureUnit = WeatherChartData.FirstOrDefault(w => w.Type == "Temperature")?.Unit ?? string.Empty;
             _selectedTemperatureUnits = _temperatureUnitMap.FirstOrDefault(u => u.Value == _temperatureUnit).Key;
@@ -203,7 +203,7 @@
         StateHasChanged();
     }
 
-    IList<object> processWeatherDataValueLists(IEnumerable<WeatherChartData> weatherData, string type)
+    IList<object> ProcessWeatherDataValueLists(IEnumerable<WeatherChartData> weatherData, string type)
     {
         return weatherData.Where(w => w.Type == type).Select(w => (object)w.Value).ToList();
     }

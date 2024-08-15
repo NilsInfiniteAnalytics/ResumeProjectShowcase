@@ -40,7 +40,6 @@ public class GeocodingService(HttpClient httpClient, ILogger logger) : IGeocodin
                 return "Unknown";
             }
             var geocodingResponse = await response.Content.ReadFromJsonAsync<GeocodingResponse>();
-            // Switch on the status code to handle different scenarios using the enum defined above.
             switch (geocodingResponse?.Status)
             {
                 case nameof(ReverseGeocodingStatusCodes.OK):
@@ -72,6 +71,6 @@ public class GeocodingService(HttpClient httpClient, ILogger logger) : IGeocodin
             logger.Error(e, "Error while requesting city name from Geocoding API");
             return "Unknown";
         }
-        
+
     }
 }
