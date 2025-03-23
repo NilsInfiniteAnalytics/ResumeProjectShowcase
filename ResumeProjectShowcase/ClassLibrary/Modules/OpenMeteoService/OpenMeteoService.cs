@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Web;
 using ClassLibrary.Interfaces;
 using ClassLibrary.Models.OpenMeteoService;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace ClassLibrary.Modules.OpenMeteoService;
 public sealed class OpenMeteoService : IOpenMeteoService
@@ -31,15 +31,15 @@ public sealed class OpenMeteoService : IOpenMeteoService
         query["end_date"] = endDateString;
         query["hourly"] = "temperature_2m,relative_humidity_2m,surface_pressure";
         var requestUri = $"{_archiveApiUrl}?{query.ToString()}";
-        _logger.Information($"Requesting weather data from OpenMeteo API: {requestUri}");
+        _logger.LogInformation($"Requesting weather data from OpenMeteo API: {requestUri}");
         var stopwatch = new Stopwatch();
         stopwatch.Start();
         try
         {
             var response = await _httpClient.GetAsync(requestUri);
             stopwatch.Stop();
-            _logger.Information($"Request took {stopwatch.ElapsedMilliseconds} ms");
-            _logger.Information($"Response status code: {response.StatusCode}");
+            _logger.LogInformation($"Request took {stopwatch.ElapsedMilliseconds} ms");
+            _logger.LogInformation($"Response status code: {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -76,13 +76,13 @@ public sealed class OpenMeteoService : IOpenMeteoService
             }
             catch (Exception e)
             {
-                _logger.Error(e, "Error while parsing weather data from OpenMeteo API");
+                _logger.LogError(e, "Error while parsing weather data from OpenMeteo API");
                 return null;
             }
         }
         catch (HttpRequestException e)
         {
-            _logger.Error(e, "Error while requesting weather data from OpenMeteo API");
+            _logger.LogError(e, "Error while requesting weather data from OpenMeteo API");
             return null;
         }
 

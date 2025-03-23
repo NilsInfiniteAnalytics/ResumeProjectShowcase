@@ -2,49 +2,42 @@
 @inherits LayoutComponentBase
 @inject IJSRuntime JsRuntime
 
-<RadzenLayout Style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
-    <RadzenHeader>
-        <RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
-            <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
-            <RadzenLabel Text="@_windowSize" Style="margin-right: 20px;" />
-            <RadzenLabel Text="@_currentTime.ToString("HH:mm:ss")" Style="margin-right: 20px;" />
-            <RadzenLabel Text="@WelcomeText" Style="margin-right: 20px;" />
-            <RadzenLabel Text="@_version" Style="margin-left: auto; margin-right: 20px;" />
-        </RadzenStack>
-    </RadzenHeader>
-    <RadzenSidebar @bind-Expanded="@_sidebarExpanded" style="position: absolute; z-index: 3">
-        <RadzenStack AlignItems="AlignItems.End" Class="rz-p-2">
-            <RadzenButton Icon="west" Variant="Variant.Text" ButtonStyle="ButtonStyle.Secondary" Click="@(() => _sidebarExpanded = false)" />
-        </RadzenStack>
-        <RadzenPanelMenu>
-            <RadzenPanelMenuItem Text="Home" Icon="home" Path="/" />
-            <RadzenPanelMenuItem Text="Projects" Icon="code" Path="/ProjectsDirectory" />
-            <RadzenPanelMenuItem Text="Resume" Icon="list" Path="/Resume" />
+<MudLayout>
+    <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Responsive" Elevation="1">
+        <MudNavMenu>
+            <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            <MudNavLink Href="/ProjectsDirectory" Icon="@Icons.Material.Filled.Code">Projects</MudNavLink>
+            <MudNavLink Href="/Resume" Icon="@Icons.Material.Filled.List">Resume</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
 
-        </RadzenPanelMenu>
-    </RadzenSidebar>
-    <RadzenBody>
-        @Body
-    </RadzenBody>
-</RadzenLayout>
+    <MudMainContent>
+        <MudAppBar Elevation="1">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" OnClick="@ToggleDrawer" Edge="Edge.Start" Color="Color.Inherit" />
+            <MudText Class="ml-2">@_windowSize</MudText>
+            <MudText Class="ml-2">@_currentTime.ToString("HH:mm:ss")</MudText>
+            <MudText Class="ml-2">@WelcomeText</MudText>
+            <MudSpacer />
+            <MudText Class="mr-2">@_version</MudText>
+        </MudAppBar>
+        <div class="p-4">
+            @Body
+        </div>
+    </MudMainContent>
+</MudLayout>
 
 @code {
+    [CascadingParameter]
+    public MudTheme Theme { get; set; }
+    bool _drawerOpen;
     bool _sidebarExpanded;
     static string? _windowSize;
+    bool _isDarkMode = true;
     Timer? _timer;
     static DateTime _currentTime = DateTime.Now;
     static string WelcomeText => $"{Greeting}, user!";
     static string Greeting => GetGreetingByTime();
     static string? _version;
-
-    private static string GetGreetingByTime()
-    {
-        var hour = _currentTime.Hour;
-        if (hour < 12) return "Good morning";
-        if (hour < 17) return "Good afternoon";
-        return "Good evening";
-    }
-
     static int _clientTimezoneOffsetMinutes;
 
     [JSInvokable]
@@ -82,6 +75,14 @@
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    static string GetGreetingByTime()
+    {
+        var hour = _currentTime.Hour;
+        if (hour < 12) return "Good morning";
+        if (hour < 17) return "Good afternoon";
+        return "Good evening";
+    }
+
     void TimerCallback(object? state)
     {
         var utcNow = DateTime.UtcNow;
@@ -90,9 +91,14 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private static string GetVersion()
+    static string GetVersion()
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         return version != null ? $"Build Version {version}" : "Version not found";
+    }
+
+    void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
     }
 }

@@ -1,74 +1,57 @@
 ﻿@page "/WeatherDataDialog"
-@inject DialogService DialogService
 @inject IOpenMeteoService OpenMeteoService
 
-<RadzenFieldset AllowCollapse="true">
-    <HeaderTemplate>
-        <span>
-            <RadzenIcon Icon="date_range" /><b>Date selection</b>
-        </span>
-    </HeaderTemplate>
-    <ChildContent>
-        <div class="date-selection">
-            <RadzenLabel Text="Start Date" Component="startDatePicker" />
-            <RadzenDatePicker TValue="DateTime?"
-                              @bind-Value="_startDate"
-                              Placeholder="Select Start Date"
-                              DateFormat="MM/dd/yyyy"
-                              Min="DateTime.Today.AddDays(-500)"
-                              Max="DateTime.Today.AddDays(-1)"
-                              ShowTime="false" />
-            <RadzenLabel Text="End Date" Component="endDatePicker" />
-            <RadzenDatePicker TValue="DateTime?"
-                              @bind-Value="_endDate"
-                              Placeholder="Select End Date"
-                              DateFormat="MM/dd/yyyy"
-                              Min="DateTime.Today.AddDays(-500)"
-                              Max="DateTime.Today.AddDays(-1)"
-                              ShowTime="false" />
-        </div>
-    </ChildContent>
-</RadzenFieldset>
+<MudPaper Class="pa-4">
+    <MudExpansionPanels>
+        <!-- Date Selection Section -->
+        <MudExpansionPanel Text="Date Selection" Expanded="true">
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker @bind-Date="_startDate"
+                                   Label="Start Date"
+                                   DateFormat="MM/dd/yyyy"
+                                   MinDate="@DateTime.Today.AddDays(-500)"
+                                   MaxDate="@DateTime.Today.AddDays(-1)" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker @bind-Date="_endDate"
+                                   Label="End Date"
+                                   DateFormat="MM/dd/yyyy"
+                                   MinDate="@DateTime.Today.AddDays(-500)"
+                                   MaxDate="@DateTime.Today.AddDays(-1)" />
+                </MudItem>
+            </MudGrid>
+        </MudExpansionPanel>
 
-<RadzenFieldset>
-    <HeaderTemplate>
-        <span>
-            <RadzenIcon Icon="assessment" /><b>Weather Data Plots</b>
-        </span>
-    </HeaderTemplate>
-    <ChildContent>
-        @if (_weatherData == null)
-        {
-            @if (_loading)
+        <!-- Weather Data Plots Section -->
+        <MudExpansionPanel Text="Weather Data Plots">
+            @if (_weatherData == null)
             {
-                <div class="loading-indicator">
-                    <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
-                                               Value="100"
-                                               ShowValue="false"
-                                               Mode="ProgressBarMode.Indeterminate" />
-                    <p>Loading weather data...</p>
-                </div>
+                if (_loading)
+                {
+                    <div class="d-flex flex-column align-items-center">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                        <MudText>Loading weather data...</MudText>
+                    </div>
+                }
+                else
+                {
+                    <MudText>Select date range and submit to view OpenMeteo data</MudText>
+                }
             }
-            else if (!_loading && _weatherData == null)
+            else
             {
-                <p>Select date range and submit to view OpenMeteo data</p>
+                <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData)" LatLng="@LatLng" CityName="@CityName" />
             }
-        }
-        else
-        {
-            <PlotlyPlotWeatherData WeatherChartData="GetWeatherChartData(_weatherData)"
-                                   LatLng="@LatLng"
-                                   CityName="@CityName" />
-        }
-    </ChildContent>
-</RadzenFieldset>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
 
-<RadzenFieldset>
-    <ChildContent>
-        <RadzenButton Text="Submit" Click="Submit" Disabled="@_loading"/>
-        <RadzenButton Text="Cancel" Click="Cancel" Disabled="@_loading" />
-    </ChildContent>
-</RadzenFieldset>
+    <!-- Action Buttons -->
+    <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd" Class="mt-4">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="_loading">Submit</MudButton>
+        <!--<MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancel" Disabled="_loading">Cancel</MudButton>-->
+    </MudStack>
+</MudPaper>
 
 
 @code {
@@ -76,7 +59,6 @@
     public required LatLng LatLng { get; set; }
     [Parameter]
     public string CityName { get; set; }
-
     private DateTime? _startDate;
     private DateTime? _endDate;
     private WeatherData? _weatherData;
@@ -126,10 +108,5 @@
             }
             StateHasChanged();
         }
-    }
-
-    private void Cancel()
-    {
-        DialogService.Close();
     }
 }

@@ -4,26 +4,31 @@
 <PageTitle>Projects Directory</PageTitle>
 
 <div class="text-center">
-    <h1>Welcome to My Projects!</h1>
-    <p>Explore the projects I've been working on.</p>
+    <MudText Typo="Typo.h1" Align="Align.Center">Welcome to My Projects!</MudText>
+    <MudText Typo="Typo.subtitle1" Align="Align.Center">Explore the projects I've been working on.</MudText>
 
     <div style="margin-top: 40px;">
-        <RadzenButton Text="Go Home" Click="NavigateToHome" ButtonStyle="ButtonStyle.Info" />
-        <RadzenButton Text="Contact Me" Click="HandleContactMe" ButtonStyle="ButtonStyle.Success" Style="margin-left: 10px;" />
+        <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="NavigateToHome">Go Home</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="HandleContactMe" Style="margin-left: 10px;">Contact Me</MudButton>
     </div>
 
     <div class="projects-table" style="margin-top: 40px;">
-        <RadzenGrid Data="@_projects" TItem="Project">
-            <Columns>
-                <RadzenGridColumn TItem="Project" Property="Name" Title="Project Name" />
-                <RadzenGridColumn TItem="Project" Property="Description" Title="Description" Width="50vw"/>
-                <RadzenGridColumn TItem="Project" Context="project">
-                    <Template Context="project">
-                        <RadzenButton Text="Open" Click="@(args => { if (project.Url != null) { OpenProject(project.Url); } })" ButtonStyle="ButtonStyle.Primary" />
-                    </Template>
-                </RadzenGridColumn>
-            </Columns>
-        </RadzenGrid>
+        <MudTable Items="_projects">
+            <HeaderContent>
+                <MudTh>Project Name</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Project Name">@context.Name</MudTd>
+                <MudTd DataLabel="Description">@context.Description</MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => { if (!string.IsNullOrEmpty(context.Url)) OpenProject(context.Url); })">
+                        Open
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
     </div>
 </div>
 

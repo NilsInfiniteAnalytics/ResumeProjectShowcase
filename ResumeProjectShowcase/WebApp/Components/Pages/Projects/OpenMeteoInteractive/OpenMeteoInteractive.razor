@@ -1,90 +1,197 @@
 ﻿@page "/OpenMeteoInteractive"
-@inject DialogService DialogService
-@inject NotificationService NotificationService
+@inject IDialogService DialogService
 @inject IGeocodingService GeocodingService
+@inject IJSRuntime JsRuntime
+@implements IDisposable
 
 <PageTitle>Open Meteo Interactive Page - Under Construction</PageTitle>
 
-<RadzenPanel AllowCollapse="true">
-    <HeaderTemplate>
-        <span>
-            <RadzenIcon Icon="change_history" /><b>How to use this page</b>
-        </span>
-    </HeaderTemplate>
-    <ChildContent>
-        <div class="instruction-panel">
-            <ol>
-                <li>Navigate using the map to find your desired location.</li>
-                <li>Click on a location to move the marker to where you clicked.</li>
-                <li>Click the marker to open a dialog for retrieval of weather data.</li>
-                <li>Select the start and end dates for the weather data and click Submit.</li>
-            </ol>
-            This is a work in progress and will be updated with more features in the future!
+<style>
+    .map-container {
+        position: relative;
+        width: 100%;
+        height: 600px;
+        min-height: 400px;
+        overflow: hidden;
+        border-radius: 4px;
+    }
+
+    .map-controls {
+        position: absolute;
+        top: 10px;
+        left: 50px;
+        z-index: 1000;
+        width: 300px;
+        padding: 10px;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .weather-button {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudPaper Elevation="3" Class="pa-4 mb-4">
+        <MudExpansionPanels>
+            <MudExpansionPanel Text="How to use this page" Expanded="true">
+                <div>
+                    <ol>
+                        <li>Navigate using the map to find your desired location or use the search box.</li>
+                        <li>Click on a location to move the marker to where you clicked.</li>
+                        <li>Use the "Get Weather Data" button to open a dialog for retrieval of weather data.</li>
+                        <li>Select the start and end dates for the weather data and click Submit.</li>
+                    </ol>
+                    This is a work in progress and will be updated with more features in the future!
+                </div>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </MudPaper>
+
+    <MudPaper Elevation="3" Class="pa-4 mb-4">
+        <div class="map-container" @ref="_mapContainer">
+            <!-- Map controls overlay -->
+            <div class="map-controls">
+                <MudPaper Style="padding: 10px;">
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        @(_nearestCity == "Unknown" ? "Click on map to set location" : $"Selected location: {_nearestCity}")
+                    </MudText>
+                    <MudText Typo="Typo.caption" Class="mt-1">
+                        Lat: @_markerPosition.Latitude.ToString("F6"), Lng: @_markerPosition.Longitude.ToString("F6")
+                    </MudText>
+                </MudPaper>
+            </div>
+
+            <!-- Weather data button -->
+            <div class="weather-button">
+                <MudFab Color="Color.Primary"
+                        StartIcon="@Icons.Material.Filled.Cloud"
+                        Size="Size.Large"
+                        OnClick="OpenWeatherDialog"
+                        Label="Get Weather Data" />
+            </div>
+
+            <!-- Map component -->
+            <RealTimeMap Parameters="_parameters"
+                         @ref="_realTimeMap"
+                         OnClickMap="OnClickMap"
+                         height="@_mapHeight"
+                         width="@_mapWidth" />
         </div>
-    </ChildContent>
-</RadzenPanel>
-
-<RadzenGoogleMap style="height: 100%"
-                 Zoom="@_zoom"
-                 ApiKey="AIzaSyAaAyWRr-uflaYNL6jytN_K1ubG-oeLdgk"
-                 Center="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })"
-                 MapClick="OnMapClick"
-                 MarkerClick="OnMarkerClick">
-    <Markers>
-        <RadzenGoogleMapMarker Title="Selected Location"
-                               Position="@(new GoogleMapPosition() { Lat = _markerPosition.Latitude, Lng = _markerPosition.Longitude })" />
-    </Markers>
-</RadzenGoogleMap>
-
-<RadzenDialog />
+    </MudPaper>
+</MudContainer>
 
 @code {
+    ElementReference _mapContainer;
+    RealTimeMap _realTimeMap = new();
+    RealTimeMap.LoadParameters _parameters = new()
+    {
+        location = new RealTimeMap.Location()
+        {
+            latitude = 43.258509,
+            longitude = -77.606445,
+        },
+        zoomLevel = 10
+    };
     private readonly LatLng _markerPosition = new() { Latitude = 43.258509, Longitude = -77.606445 };
     private readonly int _zoom = 10;
     private string _nearestCity = "Unknown";
+    private string _mapWidth = "600px";
+    private string _mapHeight = "600px";
+    DotNetObjectReference<OpenMeteoInteractive>? _objRef;
 
-    private void OnMapClick(GoogleMapClickEventArgs args)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _markerPosition.Latitude = args.Position.Lat;
-        _markerPosition.Longitude = args.Position.Lng;
+        if (firstRender)
+        {
+            _objRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeVoidAsync("setupMapResizeListener", _objRef);
+            await UpdateMapSize();
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateMapSize()
+    {
+        var dimensions = await JsRuntime.InvokeAsync<Dimensions>("getElementDimensions", _mapContainer);
+        _mapWidth = $"{dimensions.Width}px";
+        _mapHeight = $"{dimensions.Height}px";
         StateHasChanged();
     }
 
-    private async Task OnMarkerClick()
+    [JSInvokable]
+    public async Task WindowResized()
+    {
+        await UpdateMapSize();
+    }
+
+    private async Task OnClickMap(RealTimeMap.ClicksMapArgs args)
+    {
+        if (args.sender is not { } map) return;
+        _markerPosition.Latitude = args.location.latitude;
+        _markerPosition.Longitude = args.location.longitude;
+        await _realTimeMap.movePoint([_markerPosition.Latitude, _markerPosition.Longitude]);
+        await UpdateLocationInfo();
+        StateHasChanged();
+    }
+
+    private async Task UpdateLocationInfo()
     {
         try
         {
             _nearestCity = await GeocodingService.GetCityNameAsync(_markerPosition);
-            await DialogService.OpenAsync<WeatherDataDialog>(
-            "Request OpenMeteo Weather Data",
-            new Dictionary<string, object>
-                            {
-                                { "LatLng", _markerPosition },
-                                { "CityName", _nearestCity},
-                            },
-            new DialogOptions
-                {
-                    Width = "60vw",
-                    Height = "70vh",
-                    Resizable = true,
-                    CloseDialogOnEsc = true
-                });
-            NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Success,
-                    Duration = 4000,
-                    SummaryContent = ns =>@<RadzenText TextStyle="TextStyle.H6">Opened dialog!</RadzenText>,
-            });
+            StateHasChanged();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Duration = 4000,
-                    SummaryContent = ns =>@<RadzenText TextStyle="TextStyle.H6">Failed to open dialog!</RadzenText>,
-                DetailContent = ns =>@<RadzenText>@e.Message</RadzenText>,
-            });
+            _nearestCity = "Location lookup failed";
         }
+    }
+
+    public void Dispose()
+    {
+        _objRef?.Dispose();
+    }
+
+    private async Task OpenWeatherDialog()
+    {
+        try
+        {
+            // Ensure we have the latest city name
+            await UpdateLocationInfo();
+
+            // Prepare dialog parameters
+            var parameters = new DialogParameters
+            {
+                ["LatLng"] = _markerPosition,
+                ["CityName"] = _nearestCity
+            };
+
+            // Show the dialog
+            var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = true,
+                CloseButton = true,
+                Position = DialogPosition.Center
+            };
+
+            var dialog = await DialogService.ShowAsync<WeatherDataDialog>("Weather Data for " + _nearestCity, parameters, options);
+        }
+        catch (Exception ex)
+        {
+            
+        }
+    }
+
+    public class Dimensions
+    {
+        public double Width { get; set; }
+        public double Height { get; set; }
     }
 }

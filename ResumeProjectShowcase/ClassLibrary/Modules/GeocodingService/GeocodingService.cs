@@ -1,9 +1,9 @@
 ﻿using ClassLibrary.Interfaces;
 using ClassLibrary.Models.OpenMeteoService;
-using System.Net.Http.Json;
 using ClassLibrary.Models.GeocodingService;
-using Serilog;
 using System.Diagnostics;
+using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 
 namespace ClassLibrary.Modules.GeocodingService;
 public class GeocodingService(HttpClient httpClient, ILogger logger) : IGeocodingService
@@ -26,15 +26,15 @@ public class GeocodingService(HttpClient httpClient, ILogger logger) : IGeocodin
     public async Task<string> GetCityNameAsync(LatLng latLng)
     {
         var url = $"https://maps.googleapis.com/maps/api/geocode/json?latlng={latLng.Latitude},{latLng.Longitude}&key={ApiKey}";
-        logger.Information($"Requesting city name from Geocoding API: {url}");
+        logger.LogInformation($"Requesting city name from Geocoding API: {url}");
         var stopwatch = new Stopwatch();
         stopwatch.Start();
         try
         {
             var response = await httpClient.GetAsync(url);
             stopwatch.Stop();
-            logger.Information($"Request took {stopwatch.ElapsedMilliseconds} ms");
-            logger.Information($"Response status code: {response.StatusCode}");
+            logger.LogInformation($"Request took {stopwatch.ElapsedMilliseconds} ms");
+            logger.LogInformation($"Response status code: {response.StatusCode}");
             if (!response.IsSuccessStatusCode)
             {
                 return "Unknown";
@@ -48,19 +48,13 @@ public class GeocodingService(HttpClient httpClient, ILogger logger) : IGeocodin
                         .AddressComponents.FirstOrDefault(ac => ac.Types.Contains("locality"))?.LongName ?? "Unknown";
                     return cityName;
                 case nameof(ReverseGeocodingStatusCodes.ZERO_RESULTS):
-                    logger.Error($"{geocodingResponse?.Status}");
-                    return "Unknown";
                 case nameof(ReverseGeocodingStatusCodes.OVER_QUERY_LIMIT):
-                    logger.Error($"{geocodingResponse?.Status}");
-                    return "Unknown";
                 case nameof(ReverseGeocodingStatusCodes.REQUEST_DENIED):
-                    logger.Error($"{geocodingResponse?.Status}");
-                    return "Unknown";
                 case nameof(ReverseGeocodingStatusCodes.INVALID_REQUEST):
-                    logger.Error($"{geocodingResponse?.Status}");
+                    logger.LogError($"{geocodingResponse?.Status}");
                     return "Unknown";
                 case nameof(ReverseGeocodingStatusCodes.UNKNOWN_ERROR):
-                    logger.Error($"{geocodingResponse?.Status}");
+                    logger.LogError($"{geocodingResponse?.Status}");
                     return await GetCityNameAsync(latLng);
                 default:
                     return "Unknown";
@@ -68,7 +62,7 @@ public class GeocodingService(HttpClient httpClient, ILogger logger) : IGeocodin
         }
         catch (HttpRequestException e)
         {
-            logger.Error(e, "Error while requesting city name from Geocoding API");
+            logger.LogError(e, "Error while requesting city name from Geocoding API");
             return "Unknown";
         }
 

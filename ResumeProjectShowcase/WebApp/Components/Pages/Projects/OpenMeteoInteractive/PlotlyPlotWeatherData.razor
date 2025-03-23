@@ -3,32 +3,50 @@
 @inject IUnitsConverterService UnitsConverterService
 @inject IHumidAirPropertiesService HumidAirPropertiesService
 
-<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap">
-    <RadzenStack Orientation="Orientation.Vertical" Gap="4px">
-        Temperature Units
-        <RadzenDropDown @bind-Value="@_selectedTemperatureUnits"
-                        TextProperty="Text"
-                        ValueProperty="Value"
-                        Data="@(Enum.GetValues(typeof(TemperatureUnits)).Cast<TemperatureUnits>().Select(t => new { Text = $"{t}", Value = t }))"
-                        Change="OnTemperatureUnitDropDownChange" />
-    </RadzenStack>
-    <RadzenStack Orientation="Orientation.Vertical" Gap="4px">
-        Surface Pressure Units
-        <RadzenDropDown @bind-Value="@_selectedPressureUnits"
-                        TextProperty="Text"
-                        ValueProperty="Value"
-                        Data="@(Enum.GetValues(typeof(PressureUnits)).Cast<PressureUnits>().Select(t => new { Text = $"{t}", Value = t }))"
-                        Change="OnPressureUnitDropDownChange" />
-    </RadzenStack>
-    <RadzenStack Orientation="Orientation.Vertical" Gap="4px">
-        Perform Dry Air Equation of State Calculation
-        <RadzenButton Text="Run"
-                      Click="PerformDryAirEquationOfStateCalculation"
-                      Icon="compare_arrows"
-                      ButtonStyle="ButtonStyle.Primary"
-                      class="rz-ripple" />
-    </RadzenStack>
-</RadzenStack>
+<MudStack AlignItems="AlignItems.Center" Spacing="2" Row="true" Wrap="Wrap.Wrap">
+    <!-- Temperature Units Selection -->
+    <MudStack>
+        <MudSelect T="TemperatureUnits"
+                   Value="_selectedTemperatureUnits"
+                   Class="pa-3"
+                   RelativeWidth="DropdownWidth.Adaptive"
+                   Immediate="true"
+                   Style="width:250px;"
+                   Label="Select Temperature Unit"
+                   ValueChanged="OnTemperatureUnitDropDownChange"
+                   Variant="Variant.Outlined">
+            @foreach (TemperatureUnits unit in Enum.GetValues(typeof(TemperatureUnits)))
+            {
+                <MudSelectItem T="TemperatureUnits" Value="@unit">@unit</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+
+    <!-- Surface Pressure Units Selection -->
+    <MudStack Spacing="1">
+        <MudSelect T="PressureUnits"
+                   Value="_selectedPressureUnits"
+                   Label="Select Pressure Unit"
+                   Immediate="true"
+                   Style="width:250px;"
+                   ValueChanged="OnPressureUnitDropDownChange"
+                   Variant="Variant.Outlined">
+            @foreach (PressureUnits unit in Enum.GetValues(typeof(PressureUnits)))
+            {
+                <MudSelectItem T="PressureUnits" Value="@unit">@unit</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+
+    <!-- Dry Air Equation Calculation -->
+    <MudStack Spacing="1" AlignItems="AlignItems.Center">
+        <MudText>Perform Dry Air Equation of State Calculation</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="PerformDryAirEquationOfStateCalculation"
+                   StartIcon="@Icons.Material.Filled.CompareArrows">
+            Run
+        </MudButton>
+    </MudStack>
+</MudStack>
 
 <PlotlyChart @bind-Config="_weatherDataChartConfig"
              @bind-Layout="_weatherDataChartLayout"
@@ -36,6 +54,7 @@
              @ref="_weatherDataChart"
              @key="_weatherDataChartKey"
              style="height: 30vh;" />
+
 @if (_eosTraces.Count > 0)
 {
     <PlotlyChart @bind-Config="_eosChartConfig"
@@ -47,6 +66,8 @@
 }
 
 @code {
+    [CascadingParameter]
+    public MudTheme Theme { get; set; }
     [Parameter]
     public IEnumerable<WeatherChartData>? WeatherChartData { get; set; }
     [Parameter]
@@ -144,9 +165,15 @@
         _weatherDataTraces.Clear();
         _weatherDataChartConfig = new Config { Responsive = true };
         _weatherDataChartLayout = new Layout
+        {
+            Title = new Title { Text = $"Weather Data for {CityName}, nearest to Lat={Math.Round(LatLng.Latitude, 2)},Long={Math.Round(LatLng.Longitude, 2)}" },
+            PaperBgColor = Theme.PaletteDark.Surface.ToString(),
+            PlotBgColor = Theme.PaletteDark.Surface.ToString(),
+            Font = new Font
             {
-                Title = new Title { Text = $"Weather Data for {CityName}, nearest to Lat={Math.Round(LatLng.Latitude, 2)},Long={Math.Round(LatLng.Longitude, 2)}" },
-                YAxis = new[]
+                Color = Theme.PaletteDark.TextPrimary.ToString()
+            },
+            YAxis = new[]
                                                         {
                     new YAxis
                     {
@@ -159,41 +186,41 @@
                         Side = Plotly.Blazor.LayoutLib.YAxisLib.SideEnum.Right,
                     }
                 },
-                ShowLegend = true,
-                Legend = [
+            ShowLegend = true,
+            Legend = [
                                    new Legend {
                                 X = 0,
                                 Y = (decimal)-0.2,
                                 Orientation = Plotly.Blazor.LayoutLib.LegendLib.OrientationEnum.H,
                             }]
-            };
+        };
 
         var temperatureTrace = new Scatter
-            {
-                Name = $"Temperature ({_temperatureUnit})",
-                Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = _time,
-                Y = _temperatures,
-                YAxis = "y"
-            };
+        {
+            Name = $"Temperature ({_temperatureUnit})",
+            Mode = ModeFlag.Lines | ModeFlag.Markers,
+            X = _time,
+            Y = _temperatures,
+            YAxis = "y"
+        };
 
         var humidityTrace = new Scatter
-            {
-                Name = $"Relative Humidity ({_relativeHumidityUnit})",
-                Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = _time,
-                Y = _relativeHumidities,
-                YAxis = "y"
-            };
+        {
+            Name = $"Relative Humidity ({_relativeHumidityUnit})",
+            Mode = ModeFlag.Lines | ModeFlag.Markers,
+            X = _time,
+            Y = _relativeHumidities,
+            YAxis = "y"
+        };
 
         var pressureTrace = new Scatter
-            {
-                Name = $"Surface Pressure ({_surfacePressureUnit})",
-                Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = _time,
-                Y = _surfacePressures,
-                YAxis = "y2"
-            };
+        {
+            Name = $"Surface Pressure ({_surfacePressureUnit})",
+            Mode = ModeFlag.Lines | ModeFlag.Markers,
+            X = _time,
+            Y = _surfacePressures,
+            YAxis = "y2"
+        };
 
         _weatherDataTraces.Add(temperatureTrace);
         _weatherDataTraces.Add(humidityTrace);
@@ -208,32 +235,35 @@
         return weatherData.Where(w => w.Type == type).Select(w => (object)w.Value).ToList();
     }
 
-    void OnTemperatureUnitDropDownChange(object value)
+
+    void OnTemperatureUnitDropDownChange(TemperatureUnits value)
     {
-        if (value is TemperatureUnits units)
-        {
-            _selectedTemperatureUnits = units;
-            _temperatureUnit = _temperatureUnitMap[_selectedTemperatureUnits];
-            var temperaturesArray = _temperatures.Cast<double>().ToArray();
-            var convertedTemperatures = UnitsConverterService.ConvertArray(temperaturesArray, _temperatureUnitMap[_oldSelectedUnits], _temperatureUnitMap[_selectedTemperatureUnits]);
-            _temperatures = convertedTemperatures.Cast<object>().ToList();
-            _oldSelectedUnits = _selectedTemperatureUnits;
-            DrawNewWeatherTraceData();
-        }
+        if (_oldSelectedUnits == value) return;
+        _temperatureUnit = _temperatureUnitMap[value];
+        var temperaturesArray = _temperatures.Cast<double>().ToArray();
+        var convertedTemperatures = UnitsConverterService
+            .ConvertArray(
+                temperaturesArray, 
+                _temperatureUnitMap[_oldSelectedUnits], 
+                _temperatureUnit);
+        _temperatures = convertedTemperatures.Cast<object>().ToList();
+        _oldSelectedUnits = _selectedTemperatureUnits;
+        DrawNewWeatherTraceData();
     }
 
-    void OnPressureUnitDropDownChange(object value)
+    void OnPressureUnitDropDownChange(PressureUnits value)
     {
-        if (value is PressureUnits units)
-        {
-            _selectedPressureUnits = units;
-            _surfacePressureUnit = _pressureUnitMap[_selectedPressureUnits];
-            var pressuresArray = _surfacePressures.Cast<double>().ToArray();
-            var convertedPressures = UnitsConverterService.ConvertArray(pressuresArray, _pressureUnitMap[_oldSelectedPressureUnits], _pressureUnitMap[_selectedPressureUnits]);
-            _surfacePressures = convertedPressures.Cast<object>().ToList();
-            _oldSelectedPressureUnits = _selectedPressureUnits;
-            DrawNewWeatherTraceData();
-        }
+        if (_oldSelectedPressureUnits == value) return;
+        _surfacePressureUnit = _pressureUnitMap[value];
+        var pressuresArray = _surfacePressures.Cast<double>().ToArray();
+        var convertedPressures = UnitsConverterService
+            .ConvertArray(
+                pressuresArray, 
+                _pressureUnitMap[_oldSelectedPressureUnits], 
+                _surfacePressureUnit);
+        _surfacePressures = convertedPressures.Cast<object>().ToList();
+        _oldSelectedPressureUnits = _selectedPressureUnits;
+        DrawNewWeatherTraceData();
     }
 
     void PerformDryAirEquationOfStateCalculation()
@@ -260,9 +290,15 @@
         _eosTraces.Clear();
         _eosChartConfig = new Config { Responsive = true };
         _eosChartLayout = new Layout
+        {
+            Title = new Title { Text = $"Dry Air Equation Of State [Lemmon, 2000]" },
+            PaperBgColor = Theme.PaletteDark.Surface.ToString(),
+            PlotBgColor = Theme.PaletteDark.Surface.ToString(),
+            Font = new Font
             {
-                Title = new Title { Text = $"Dry Air Equation Of State [Lemmon, 2000]" },
-                YAxis = new[]
+                Color = Theme.PaletteDark.TextPrimary.ToString()
+            },
+            YAxis = new[]
                                 {
                         new YAxis
                         {
@@ -275,59 +311,59 @@
                             Side = Plotly.Blazor.LayoutLib.YAxisLib.SideEnum.Right,
                         }
                     },
-                ShowLegend = true,
-                Legend = [
+            ShowLegend = true,
+            Legend = [
                                            new Legend {
                                 X = 0,
                                 Y = (decimal)-0.2,
                                 Orientation = Plotly.Blazor.LayoutLib.LegendLib.OrientationEnum.H,
                             }]
-            };
+        };
 
         var molarAirDensityTrace = new Scatter
-            {
-                Name = $"Dry Air Molar Density ({_molarAirDensityUnit})",
-                Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = _time,
-                Y = _molarAirDensities,
-                YAxis = "y"
-            };
+        {
+            Name = $"Dry Air Molar Density ({_molarAirDensityUnit})",
+            Mode = ModeFlag.Lines | ModeFlag.Markers,
+            X = _time,
+            Y = _molarAirDensities,
+            YAxis = "y"
+        };
 
         var molarEnthalpyTrace = new Scatter
-            {
-                Name = $"Dry Air Molar Enthalpy ({_molarEnthalpyUnit})",
-                Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = _time,
-                Y = _molarEnthalpies,
-                YAxis = "y2"
-            };
+        {
+            Name = $"Dry Air Molar Enthalpy ({_molarEnthalpyUnit})",
+            Mode = ModeFlag.Lines | ModeFlag.Markers,
+            X = _time,
+            Y = _molarEnthalpies,
+            YAxis = "y2"
+        };
 
         var molarInternalEnergyTrace = new Scatter
-            {
-                Name = $"Dry Air Molar Internal Energy ({_molarInternalEnergyUnit})",
-                Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = _time,
-                Y = _molarInternalEnergies,
-                YAxis = "y2"
-            };
+        {
+            Name = $"Dry Air Molar Internal Energy ({_molarInternalEnergyUnit})",
+            Mode = ModeFlag.Lines | ModeFlag.Markers,
+            X = _time,
+            Y = _molarInternalEnergies,
+            YAxis = "y2"
+        };
 
         var molarIsochoricSpecificHeatTrace = new Scatter
-            {
-                Name = $"Dry Air Molar Isochoric Specific Heat ({_molarIsochoricSpecificHeatUnit})",
-                Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = _time,
-                Y = _molarIsochoricSpecificHeats,
-                YAxis = "y"
-            };
+        {
+            Name = $"Dry Air Molar Isochoric Specific Heat ({_molarIsochoricSpecificHeatUnit})",
+            Mode = ModeFlag.Lines | ModeFlag.Markers,
+            X = _time,
+            Y = _molarIsochoricSpecificHeats,
+            YAxis = "y"
+        };
 
         var molarIsobaricSpecificHeatTrace = new Scatter
-            {
-                Name = $"Dry Air Molar Isobaric Specific Heat ({_molarIsobaricSpecificHeatUnit})",
-                Mode = ModeFlag.Lines | ModeFlag.Markers,
-                X = _time,
-                Y = _molarIsobaricSpecificHeats,
-                YAxis = "y"
-            };
+        {
+            Name = $"Dry Air Molar Isobaric Specific Heat ({_molarIsobaricSpecificHeatUnit})",
+            Mode = ModeFlag.Lines | ModeFlag.Markers,
+            X = _time,
+            Y = _molarIsobaricSpecificHeats,
+            YAxis = "y"
+        };
 
         _eosTraces.Add(molarAirDensityTrace);
         _eosTraces.Add(molarEnthalpyTrace);

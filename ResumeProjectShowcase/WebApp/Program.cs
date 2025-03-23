@@ -1,113 +1,133 @@
-using Radzen;
-using Serilog;
-using WebApp.Components;
 using Azure.Identity;
 using ClassLibrary.Interfaces;
-using ClassLibrary.Modules.OpenMeteoService;
-using ClassLibrary.Modules.UnitsConverterService;
 using ClassLibrary.Modules.GeocodingService;
 using ClassLibrary.Modules.HumidAirPropertiesService;
+using ClassLibrary.Modules.OpenMeteoService;
+using ClassLibrary.Modules.UnitsConverterService;
+using MudBlazor.Services;
+using Serilog;
+using WebApp.Components;
 
-var builder = WebApplication.CreateBuilder(args);
-builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
-var logger = builder.Services.BuildServiceProvider().GetRequiredService<Serilog.ILogger>();
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(new ConfigurationBuilder()
+                              .AddJsonFile("appsettings.json", optional: true)
+                              .Build())
+    .Enrich.FromLogContext()
+    .CreateLogger();
+
 try
 {
-    var azAppConfigConnection = builder.Configuration["AppConfig"];
+    Log.Information("Starting web host");
+    var builder = WebApplication.CreateBuilder(args);
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext());
+
+    // Configure Azure App Configuration
+    var configuration = builder.Configuration;
+    var azAppConfigConnection = configuration["AppConfig"];
     var azAppConfigEndpoint = Environment.GetEnvironmentVariable("AZURE_APPCONFIGURATION_ENDPOINT");
+
     if (!string.IsNullOrEmpty(azAppConfigConnection))
     {
-        builder.Configuration.AddAzureAppConfiguration(options =>
+        configuration.AddAzureAppConfiguration(options =>
         {
             options.Connect(azAppConfigConnection)
-                .ConfigureRefresh(refresh =>
-                {
-                    // All configuration values will be refreshed if the sentinel key changes.
-                    refresh.Register("TestApp:Settings:Sentinel", refreshAll: true);
-                });
+                   .ConfigureRefresh(refresh =>
+                   {
+                       refresh.Register("TestApp:Settings:Sentinel", refreshAll: true);
+                   });
         });
     }
     else if (!string.IsNullOrEmpty(azAppConfigEndpoint))
     {
-        builder.Configuration.AddAzureAppConfiguration(options =>
+        configuration.AddAzureAppConfiguration(options =>
         {
             options.Connect(new Uri(azAppConfigEndpoint), new DefaultAzureCredential())
-                .ConfigureRefresh(refresh =>
-                {
-                    // All configuration values will be refreshed if the sentinel key changes.
-                    refresh.Register("TestApp:Settings:Sentinel", refreshAll: true);
-                });
+                   .ConfigureRefresh(refresh =>
+                   {
+                       refresh.Register("TestApp:Settings:Sentinel", refreshAll: true);
+                   });
         });
     }
     else if (builder.Environment.IsDevelopment())
     {
-        // Use the local.settings.json file for local development.
-        builder.Configuration.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
+        configuration.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
     }
     else
     {
         throw new Exception("No valid Azure App Configuration connection string or endpoint found.");
     }
     builder.Services.AddAzureAppConfiguration();
-}
-catch (Exception e)
-{
-    logger.Error(e, "Error while configuring Azure App Configuration");
-    throw;
-}
 
-builder.Services
-    .AddRazorComponents()
-    .AddInteractiveServerComponents();
-builder.Services
-    .AddRadzenComponents();
-builder.Services
-    .AddHttpClient();
+    // Register Razor components and HttpClient.
+    builder.Services
+        .AddRazorComponents()
+        .AddInteractiveServerComponents();
+    builder.Services.AddHttpClient();
 
+    // Register OpenMeteoService only if the URL is provided.
+    var openMeteoArchiveApiUrl = configuration["OpenMeteoArchiveApiUrl"];
+    if (!string.IsNullOrEmpty(openMeteoArchiveApiUrl))
+    {
+        builder.Services.AddSingleton<IOpenMeteoService>(sp =>
+        {
+            var httpClient = sp.GetRequiredService<HttpClient>();
+            var logger = sp.GetRequiredService<ILogger<GeocodingService>>();
+            return new OpenMeteoService(httpClient, openMeteoArchiveApiUrl, logger);
+        });
+    }
+    else
+    {
+        Log.Warning("OpenMeteoArchiveApiUrl is not configured. OpenMeteoService will not be registered.");
+    }
 
-
-var openMeteoArchiveApiUrl = builder.Configuration["OpenMeteoArchiveApiUrl"];
-if (!string.IsNullOrEmpty(openMeteoArchiveApiUrl))
-{
-    builder.Services.AddSingleton<IOpenMeteoService>(sp =>
+    builder.Services.AddMudServices();
+    builder.Services.AddTransient<IUnitsConverterService, UnitsConverterService>();
+    builder.Services.AddTransient<IHumidAirPropertiesService, HumidAirPropertiesService>();
+    builder.Services.AddTransient<IGeocodingService>(sp =>
     {
         var httpClient = sp.GetRequiredService<HttpClient>();
-        return new OpenMeteoService(httpClient, openMeteoArchiveApiUrl, logger);
+        var logger = sp.GetRequiredService<ILogger<GeocodingService>>();
+        return new GeocodingService(httpClient, logger);
     });
-}
 
-builder.Services.AddTransient<IUnitsConverterService, UnitsConverterService>();
-builder.Services.AddTransient<IHumidAirPropertiesService, HumidAirPropertiesService>();
-builder.Services.AddTransient<IGeocodingService>(sp =>
-{
-    var httpClient = sp.GetRequiredService<HttpClient>();
-    return new GeocodingService(httpClient, logger);
-});
-
-builder.Services.AddServerSideBlazor().AddCircuitOptions(o =>
-{
-    o.DetailedErrors = builder.Environment.IsDevelopment();
-});
-
-var app = builder.Build();
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    app.UseHsts();
-}
-app.UseAzureAppConfiguration();
-app.UseHttpsRedirection();
-app.UseStaticFiles(new StaticFileOptions
-{
-    OnPrepareResponse = ctx =>
+    builder.Services.AddServerSideBlazor().AddCircuitOptions(o =>
     {
-        ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.CacheControl] = "no-cache, no-store, must-revalidate";
-        ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Pragma] = "no-cache";
-        ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Expires] = "0";
+        o.DetailedErrors = builder.Environment.IsDevelopment();
+    });
+
+    var app = builder.Build();
+
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseExceptionHandler("/Error", createScopeForErrors: true);
+        app.UseHsts();
     }
-});
-app.UseSerilogRequestLogging();
-app.UseAntiforgery();
-app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
-app.Run();
+
+    app.UseAzureAppConfiguration();
+    app.UseHttpsRedirection();
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        OnPrepareResponse = ctx =>
+        {
+            ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.CacheControl] = "no-cache, no-store, must-revalidate";
+            ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Pragma] = "no-cache";
+            ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Expires] = "0";
+        }
+    });
+    app.UseSerilogRequestLogging();
+    app.UseAntiforgery();
+    app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
